@@ -15,5 +15,5 @@ enable_testing()
 add_subdirectory(lib/ricp)
 add_subdirectory(src)
 
-add_subdirectory(lib/gtest)
+add_subdirectory(lib/gmock-1.6.0)
 add_subdirectory(test)

@@ -13,11 +13,10 @@ TEST(CollectionProcessor, shouldProcessSimpleDocument) {
   DocumentSourceMock docSource;
   {
     InSequence expect;
-    EXPECT_CALL(docSource, hasNext()).WillOnce(Return(true));
-    EXPECT_CALL(docSource, next());
+    EXPECT_CALL(docSource, fetchNext()).WillOnce(Return(true));
     EXPECT_CALL(docSource, getUrl()).WillOnce(Return("foo.bar"));
     EXPECT_CALL(docSource, getText()).WillOnce(Return("<html><body>Term</body></html>"));
-    EXPECT_CALL(docSource, hasNext()).WillOnce(Return(false));
+    EXPECT_CALL(docSource, fetchNext()).WillOnce(Return(false));
   }
 
   IndexerMock indexer;

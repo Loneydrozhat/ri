@@ -7,8 +7,7 @@ using namespace std;
 void CollectionProcessor::process() {
   HTML::ParserDom parser;
 
-  while (document_source_->hasNext()) {
-    document_source_->next();
+  while (document_source_->fetchNext()) {
     string url = document_source_->getUrl();
     indexer_->beginDocument(url);
 

@@ -1,21 +1,18 @@
 #ifndef __DOCUMENT_SOURCE_H__
 #define __DOCUMENT_SOURCE_H__
 
+#include <string>
+
 using namespace std;
 
 class DocumentSource {
   public:
-    virtual bool hasNext() {
-      return false;
-    }
-    virtual void next() {}
-    virtual string getUrl() {
-      return NULL;
-    }
-    virtual string getText() {
-      return NULL;
-    }
+    virtual bool fetchNext() = 0;
+    virtual string getUrl() = 0;
+    virtual string getText() = 0;
     virtual ~DocumentSource() {}
 };
+
+DocumentSource* collectionArchive(const string &inputDirectory, const string &indexFileName);
 
 #endif

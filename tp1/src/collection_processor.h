@@ -1,16 +1,10 @@
 #ifndef __COLLECTION_PROCESSOR_H__
 #define __COLLECTION_PROCESSOR_H__
 
-#include "Document.h"
+#include "document_source.h"
 #include "indexer.h"
 
-class DocumentSource {
-  public:
-    virtual bool getNextDocument(RICPNS::Document &doc) {
-      return false;
-    }
-    virtual ~DocumentSource() {}
-};
+using namespace std;
 
 class CollectionProcessor {
   public:

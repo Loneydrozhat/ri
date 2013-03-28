@@ -1,20 +1,18 @@
 #include <htmlcxx/html/ParserDom.h>
 #include "collection_processor.h"
 
-using namespace RICPNS;
 using namespace htmlcxx;
 using namespace std;
 
 void CollectionProcessor::process() {
   HTML::ParserDom parser;
-  Document doc;
-  doc.clear();
 
-  while (document_source_->getNextDocument(doc)) {
-    string url = doc.getURL();
+  while (document_source_->hasNext()) {
+    document_source_->next();
+    string url = document_source_->getUrl();
     indexer_->beginDocument(url);
 
-    string html = doc.getText();
+    string html = document_source_->getText();
     tree<HTML::Node> dom = parser.parseTree(html);
     tree<HTML::Node>::iterator it = dom.begin();
     tree<HTML::Node>::iterator end = dom.end();
@@ -25,8 +23,6 @@ void CollectionProcessor::process() {
         indexer_->addTerm(term);
       }
     }
-
-    doc.clear();
   }
 
   indexer_->end();

@@ -1,47 +1,33 @@
 #include <string>
 #include "gtest/gtest.h"
 #include "collection_processor.h"
+#include "indexer_mock.h"
+#include "document_source_mock.h"
 
 using namespace std;
-using namespace RICPNS;
+using ::testing::InSequence;
+using ::testing::Return;
 
-class FakeDocumentSource : public DocumentSource {
-  public:
-    FakeDocumentSource() {
-      has_next_ = true;
-    }
-    virtual bool getNextDocument(Document &doc) {
-      if (has_next_) {
-        string url = "foo.bar";
-        string text = "<html><body>Term</body></html>";
-        doc.setURL(url);
-        doc.setText(text);
-        has_next_ = false;
-      }
-      return false;
-    }
-  private:
-    bool has_next_ = true;
-};
+TEST(CollectionProcessor, shouldProcessSimpleDocument) {
 
-class CollectionProcessorTest : public testing::Test {
-  protected:
-    virtual void SetUp() {
-      indexer_ = new Indexer();
-      doc_source_ = new FakeDocumentSource();
-      processor_ = new CollectionProcessor(doc_source_, indexer_);
-    }
-    virtual void TearDown() {
-      delete indexer_;
-      delete doc_source_;
-      delete processor_;
-    }
-    Indexer* indexer_;
-    DocumentSource* doc_source_;
-    CollectionProcessor* processor_;
-};
+  DocumentSourceMock docSource;
+  {
+    InSequence expect;
+    EXPECT_CALL(docSource, hasNext()).WillOnce(Return(true));
+    EXPECT_CALL(docSource, next());
+    EXPECT_CALL(docSource, getUrl()).WillOnce(Return("foo.bar"));
+    EXPECT_CALL(docSource, getText()).WillOnce(Return("<html><body>Term</body></html>"));
+    EXPECT_CALL(docSource, hasNext()).WillOnce(Return(false));
+  }
 
-TEST_F(CollectionProcessorTest, shouldRun) {
-  processor_->process();
-  //EXPECT_EQ("Hello, world!", "Hello, world!");
+  IndexerMock indexer;
+  {
+    InSequence expect;
+    EXPECT_CALL(indexer, beginDocument("foo.bar"));
+    EXPECT_CALL(indexer, addTerm("Term"));
+    EXPECT_CALL(indexer, end());
+  }
+
+  CollectionProcessor processor(&docSource, &indexer);
+  processor.process();
 }

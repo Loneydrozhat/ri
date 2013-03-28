@@ -3,8 +3,8 @@
 
 class Indexer {
   public:
-    virtual void beginDocument(std::string &url) {}
-    virtual void addTerm(std::string &term) {}
+    virtual void beginDocument(const std::string &url) {}
+    virtual void addTerm(const std::string &term) {}
     virtual void end() {}
     virtual ~Indexer() {}
 };

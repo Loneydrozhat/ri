@@ -1,3 +1,4 @@
+#include <sstream>
 #include <htmlcxx/html/ParserDom.h>
 #include "collection_processor.h"
 
@@ -12,14 +13,19 @@ void CollectionProcessor::process() {
     indexer_->beginDocument(url);
 
     string html = document_source_->getText();
+    
     tree<HTML::Node> dom = parser.parseTree(html);
     tree<HTML::Node>::iterator it = dom.begin();
     tree<HTML::Node>::iterator end = dom.end();
 
     for (; it != end; ++it) {
       if ((!it->isTag()) && (!it->isComment())) {
-        string term = it->text();
-        indexer_->addTerm(term);
+        string block = it->text();
+        string term;
+        stringstream ss(block);
+        while (ss >> term) {
+          indexer_->addTerm(term);
+        };
       }
     }
   }

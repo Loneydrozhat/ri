@@ -15,4 +15,6 @@ class DocumentSource {
 
 DocumentSource* collectionArchive(const string &inputDirectory, const string &indexFileName);
 
+string stripHttpHeaders(const string &text);
+
 #endif

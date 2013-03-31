@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iostream>
 #include "document_source.h"
 #include "CollectionReader.h"
 
@@ -10,7 +12,11 @@ class CollectionArchive : public DocumentSource {
       reader = new CollectionReader(inputDirectory, indexFileName);
     }
     virtual bool fetchNext() {
-      return reader->getNextDocument(doc);
+      if (reader->getNextDocument(doc)) {
+        doc.setText(stripHttpHeaders(doc.getText()));
+        return true;
+      }
+      return false;
     }
     virtual string getUrl() {
       return doc.getURL();
@@ -25,7 +31,6 @@ class CollectionArchive : public DocumentSource {
   private:
     Document doc;
     CollectionReader* reader;
-    bool hasNext = false;
 };
 
 DocumentSource* collectionArchive(const string &inputDirectory, const string &indexFileName) {

@@ -54,6 +54,10 @@ bool CollectionReader::getNextDocument(Document & doc) {
 				 &endOffset,
 				 &uncompressedPageSize);
 
+	if(feof(inputIndexFilePtr_)) {
+		return false;
+	}
+
 	string tmpContentFileName;
 	if(inputContentFileName_ == "") { // Reading first line in index
 		// Openning content file
@@ -88,9 +92,6 @@ bool CollectionReader::getNextDocument(Document & doc) {
 	size_t nchars = fread(compressedDoc, sizeof(char), compressedDocSize, inputContentFilePtr_);
 	assert(nchars == compressedDocSize);
 
-	if(feof(inputIndexFilePtr_)) {
-		return false;
-	}
 
 	string docStr;
 	int uRet = uncompressDocument(compressedDoc,

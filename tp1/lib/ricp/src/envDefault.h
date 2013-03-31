@@ -15,7 +15,7 @@ namespace RICPNS {
 
 #define MAX_FILE_SIZE 1610612736
 
-#define DEBUG 1
+#define DEBUG 0
 
 #define USE_INPUT_BUFFER 1
 #define INPUT_BUFFER_SIZE 20971520 // 20MB

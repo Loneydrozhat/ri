@@ -1,3 +1,4 @@
+#include <iostream>
 #include <sstream>
 #include <htmlcxx/html/ParserDom.h>
 #include "collection_processor.h"
@@ -7,6 +8,8 @@ using namespace std;
 
 void CollectionProcessor::process() {
   HTML::ParserDom parser;
+
+  HTML::ParserSax sax;
 
   while (document_source_->fetchNext()) {
     string url = document_source_->getUrl();
@@ -19,7 +22,13 @@ void CollectionProcessor::process() {
     tree<HTML::Node>::iterator end = dom.end();
 
     for (; it != end; ++it) {
+      
       if ((!it->isTag()) && (!it->isComment())) {
+        string parentTag = dom.parent(it)->tagName();
+        if (parentTag == "script" || parentTag == "style") {
+          continue;
+        }
+        
         string block = it->text();
         string term;
         stringstream ss(block);

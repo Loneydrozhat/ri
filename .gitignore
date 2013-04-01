@@ -18,3 +18,7 @@ build
 # Sublime Text metadata
 *.sublime-project
 *.sublime-workspace
+
+# Eclipse metadata
+.project
+.cproject

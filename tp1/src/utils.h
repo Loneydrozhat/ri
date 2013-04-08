@@ -19,4 +19,6 @@ struct IoException : public runtime_error {
     explicit IoException(const string &msg):runtime_error(msg){};
 };
 
+const string ERASE = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
+
 #endif

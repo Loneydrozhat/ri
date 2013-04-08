@@ -74,14 +74,17 @@ class IndexerImpl : public Indexer {
     }
     virtual void end() {
       endDocument();
-      cout << documents_.size() << " documents processed" << endl;
-
+      cout << ERASE << documents_.size() <<  " processed" << endl;
+      cout << map_.size() << " distinct terms" << endl;
       cout << totalTriples_ << " triples written to temp file" << endl;
+
       vector<Range> buckets;
       sortBuckets(buckets);
-      cout << (totalTriples_/bucketSize_ + 1) << " blocks sorted" << endl;
+      
 
+      cout << "Merging blocks..." << endl;
       writeInvertedList(buckets);
+      cout << "Inverted lists generated" << endl;
 
       print();
     }
@@ -90,7 +93,7 @@ class IndexerImpl : public Indexer {
     unordered_map<string, VocabularyEntry> map_;
     TempFile* tempf_;
     size_t totalTriples_ = 0;
-    size_t bucketSize_ = 128;
+    size_t bucketSize_ = 2048;
 
     void writeDocumentTerms() {
 
@@ -120,6 +123,10 @@ class IndexerImpl : public Indexer {
           entry.second.df_++;
         }
       }
+
+      if (currentDoc % 100 == 0) {
+        cout << ERASE << currentDoc <<  " processed" << flush;
+      }
     }
 
     void sortTriples(vector<Triple> &buffer, const size_t start, const unsigned int offset) {
@@ -146,32 +153,60 @@ class IndexerImpl : public Indexer {
     }
 
     void sortBuckets(vector<Range> &buckets) {
+      cout << "Sorting blocks..." << endl;
+
       vector<Triple> buffer;
       buffer.reserve(bucketSize_);
+      size_t totalBuckets = totalTriples_ / bucketSize_;
+      totalBuckets += totalTriples_ % bucketSize_ > 0 ? 1 : 0;
 
       for (size_t start = 0; start < totalTriples_; start += bucketSize_) {
         size_t offset = min(bucketSize_, totalTriples_ - start);
         sortTriples(buffer, start, offset);
         Range range(start, start + offset);
         buckets.push_back(range);
-        //cout << count << " Sorted " << start << " - " << offset << endl;
+        cout << ERASE << buckets.size() <<  " of " << totalBuckets << flush;
       }
+      cout << endl;
     }
 
     void writeInvertedList(vector<Range> &buckets) {
       vector<BucketTriple> buffer;
+      BucketTriple triple;
       buffer.reserve(buckets.size());
 
-      BucketTriple triple;
+      // fill the buffer with one triple from each bucket
       for (size_t i = 0; i < buckets.size(); i++) {
         readTriple(buckets[i], triple);
         triple.bucket_ = i;
         buffer.push_back(triple);
       }
+      // construct a heap in the buffer
       buildMinHeap(buffer);
 
-      
-      
+      // pick the smallest triple, one by one, refilling the buffer
+      for (size_t i = 0; buffer.size() > 0; i++) {
+        BucketTriple min = buffer[0];
+        //cout << min.term_ << " " << min.doc_ << " " << min.tf_ << endl;
+
+
+        int_id bucket = min.bucket_;
+        Range &bucketRange = buckets[bucket];
+        if (bucketRange.start_ < bucketRange.end_) {
+          // bucket has triples
+          readTriple(bucketRange, triple);
+          triple.bucket_ = bucket;
+          popMinAndPush(buffer, triple);
+        } else {
+          // bucket is empty
+          popMin(buffer);
+        }
+
+        if (i % 1000 == 0) {
+          cout << ERASE << (100 * i / totalTriples_) << "%" << flush;
+        }
+      }
+      cout << ERASE << "100%" << endl;
     }
 
     void readTriple(Range &range, BucketTriple &triple) {
@@ -180,7 +215,7 @@ class IndexerImpl : public Indexer {
       triple.term_ = tempf_->readInt();
       triple.doc_ = tempf_->readInt();
       triple.tf_ = tempf_->readInt();
-      range.start_++;
+      range.start_ = range.start_ + 1;
     }
 };
 

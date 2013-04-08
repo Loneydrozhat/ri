@@ -2,6 +2,7 @@
 #include <sstream>
 #include <htmlcxx/html/ParserDom.h>
 #include "collection_processor.h"
+#include "utils.h"
 
 using namespace htmlcxx;
 using namespace std;
@@ -25,6 +26,7 @@ void CollectionProcessor::process() {
       
       if ((!it->isTag()) && (!it->isComment())) {
         string parentTag = dom.parent(it)->tagName();
+        lowerString(parentTag);
         if (parentTag == "script" || parentTag == "style") {
           continue;
         }
@@ -33,7 +35,8 @@ void CollectionProcessor::process() {
         string term;
         stringstream ss(block);
         while (ss >> term) {
-          indexer_->addTerm(term);
+          lowerString(term);
+          indexer_->addTerm(stripSpecialChars(term));
         };
       }
     }

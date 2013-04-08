@@ -11,12 +11,12 @@ int main(int argc, char** argv) {
   string inputDirectory("/home/danilo/workspaces/ri/tp1/data");
   string indexFileName("pagesRICompressed0.index.txt");
   DocumentSource* source = collectionArchive(inputDirectory, indexFileName);
-
-  Indexer indexer;
+  Indexer* indexer = createIndexer();
   
-  CollectionProcessor processor(source, &indexer);
+  CollectionProcessor processor(source, indexer);
   processor.process();
   
   delete source;
+  delete indexer;
   return EXIT_SUCCESS;
 }

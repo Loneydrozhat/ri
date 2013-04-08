@@ -2,7 +2,7 @@
 
 include_directories(${TP1_SOURCE_DIR}/lib/ricp/src)
 
-add_library(indexer utils indexer document_source collection_processor)
+add_library(indexer utils temp_file indexer document_source collection_processor)
 
 add_executable(tp1 main)
 target_link_libraries(tp1 indexer htmlcxx RICPlib z)

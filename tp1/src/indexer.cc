@@ -5,6 +5,7 @@
 #include "indexer.h"
 #include "temp_file.h"
 #include "heap.h"
+#include "inverted_list.h"
 
 struct VocabularyEntry {
   int_id id_;
@@ -14,25 +15,6 @@ struct VocabularyEntry {
     id_ = 0;
     df_ = 0;
     tf_ = 0;
-  }
-};
-
-struct Triple {
-  int_id term_;
-  int_id doc_;
-  int_id tf_;
-  int compareTo(Triple &t2) {
-    int diff = term_ - t2.term_;
-    if (diff == 0) {
-      diff = doc_ - t2.doc_;
-    }
-    return diff;
-  }
-  friend bool operator> (Triple &t1, Triple &t2) {
-    return t1.compareTo(t2) > 0;
-  }
-  friend bool operator< (Triple &t1, Triple &t2) {
-    return t1.compareTo(t2) < 0;
   }
 };
 
@@ -93,7 +75,7 @@ class IndexerImpl : public Indexer {
     unordered_map<string, VocabularyEntry> map_;
     TempFile* tempf_;
     size_t totalTriples_ = 0;
-    size_t bucketSize_ = 2048;
+    size_t bucketSize_ = 1048576;
 
     void writeDocumentTerms() {
 
@@ -184,11 +166,12 @@ class IndexerImpl : public Indexer {
       // construct a heap in the buffer
       buildMinHeap(buffer);
 
+      InvertedListWriter* writer = createInvertedListWriter();
       // pick the smallest triple, one by one, refilling the buffer
       for (size_t i = 0; buffer.size() > 0; i++) {
         BucketTriple min = buffer[0];
         //cout << min.term_ << " " << min.doc_ << " " << min.tf_ << endl;
-
+        writer->writeEntry(min.term_, min.doc_, min.tf_);
 
         int_id bucket = min.bucket_;
         Range &bucketRange = buckets[bucket];
@@ -206,6 +189,9 @@ class IndexerImpl : public Indexer {
           cout << ERASE << (100 * i / totalTriples_) << "%" << flush;
         }
       }
+      writer->close();
+      delete writer;
+
       cout << ERASE << "100%" << endl;
     }
 

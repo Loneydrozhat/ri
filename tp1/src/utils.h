@@ -5,9 +5,11 @@
 #include <stdexcept>
 #include <string>
 
+using namespace std;
+
 typedef unsigned int int_id;
 
-using namespace std;
+const string ERASE = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
 
 string stripHttpHeaders(const string &text);
 
@@ -19,6 +21,5 @@ struct IoException : public runtime_error {
     explicit IoException(const string &msg):runtime_error(msg){};
 };
 
-const string ERASE = "\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b";
 
 #endif

@@ -20,7 +20,10 @@ int main(int argc, char** argv) {
   
   CollectionProcessor processor(source, indexer);
   cout << "Processing documents..." << endl;
+  unsigned int t0 = time(NULL);
   processor.process();
+  unsigned int t1 = time(NULL) - t0;
+  cout << "Elapsed time " << t1 << "s" << endl;
   
   delete source;
   delete indexer;

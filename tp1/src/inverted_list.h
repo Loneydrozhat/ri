@@ -1,16 +1,23 @@
 #ifndef __INVERTED_LIST_H__
 #define __INVERTED_LIST_H__
 
+#include <string>
+#include "utils.h"
+
 using namespace std;
 
-class Indexer {
+class InvertedList {
   public:
-    virtual void beginDocument(const string &url) {};
-    virtual void addTerm(const string &term) {};
-    virtual void end() {};
-    virtual ~Indexer() {}
+    virtual ~InvertedList() {}
 };
 
-Indexer* createIndexer();
+class InvertedListWriter {
+  public:
+    virtual ~InvertedListWriter() {}
+    virtual void writeEntry(int_id term, int_id doc, int_id tf) {}
+    virtual void close() {}
+};
+
+InvertedListWriter* createInvertedListWriter();
 
 #endif

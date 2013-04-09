@@ -10,6 +10,9 @@ using namespace std;
 int main(int argc, char** argv) {
 
   //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
+  //string indexFileName("index-small.txt");
+
+  //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
   //string indexFileName("index.txt");
 
   string inputDirectory("/home/danilo/workspaces/ri/tp1/data");

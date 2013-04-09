@@ -8,7 +8,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/CMakeModules/")
 project(TP1)
 
 set (CMAKE_C_FLAGS "-Wall -Werror")
-set (CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11")
+set (CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11 -g")
+# set (CMAKE_CXX_FLAGS "-Wall -Werror -std=c++11 -pg -fno-omit-frame-pointer")
 
 enable_testing()
 

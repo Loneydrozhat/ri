@@ -10,11 +10,9 @@
 struct VocabularyEntry {
   int_id id_;
   int_id df_;
-  int_id tf_;
   VocabularyEntry() {
     id_ = 0;
     df_ = 0;
-    tf_ = 0;
   }
 };
 
@@ -52,7 +50,12 @@ class IndexerImpl : public Indexer {
       if (e.id_ == 0) {
         e.id_ = map_.size();
       }
-      e.tf_++;
+      if (freqMap_.count(e.id_)) {
+        freqMap_[e.id_] = freqMap_[e.id_] + 1;
+      } else {
+        freqMap_[e.id_] = 1;
+      }
+      //e.tf_++;
     }
     virtual void end() {
       endDocument();
@@ -73,6 +76,7 @@ class IndexerImpl : public Indexer {
   private:
     vector<string> documents_;
     unordered_map<string, VocabularyEntry> map_;
+    unordered_map<int_id, int_id> freqMap_;
     TempFile* tempf_;
     size_t totalTriples_ = 0;
     size_t bucketSize_ = 1048576;
@@ -92,21 +96,20 @@ class IndexerImpl : public Indexer {
         return;
       }
 
-      for (auto& entry: map_) {
-        if (entry.second.tf_ > 0) {
-          // write triples <term, doc, tf> on temp file
-          tempf_->writeInt(entry.second.id_);
-          tempf_->writeInt(currentDoc);
-          tempf_->writeInt(entry.second.tf_);
-          totalTriples_++;
+      for (auto& entry: freqMap_) {
+        // write triples <term, doc, tf> on temp file
+        tempf_->writeInt(entry.first);
+        tempf_->writeInt(currentDoc);
+        tempf_->writeInt(entry.second);
+        totalTriples_++;
 
-          // clear tf count to 
-          entry.second.tf_ = 0;
-          entry.second.df_++;
-        }
+        // clear tf count to 
+        //entry.second.df_++;
       }
 
-      if (currentDoc % 100 == 0) {
+      freqMap_.erase(freqMap_.begin(), freqMap_.end());
+
+      if (currentDoc % 10 == 0) {
         cout << ERASE << currentDoc <<  " processed" << flush;
       }
     }

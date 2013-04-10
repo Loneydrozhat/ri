@@ -3,6 +3,7 @@
 
 #include <string>
 #include "utils.h"
+#include "vocabulary.h"
 
 using namespace std;
 
@@ -18,6 +19,6 @@ class InvertedListWriter {
     virtual void close() {}
 };
 
-InvertedListWriter* createInvertedListWriter();
+InvertedListWriter* createInvertedListWriter(Vocabulary &vocabulary);
 
 #endif

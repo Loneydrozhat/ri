@@ -21,5 +21,11 @@ struct IoException : public runtime_error {
     explicit IoException(const string &msg):runtime_error(msg){};
 };
 
+const int UNKNOWN = 0;
+const int UTF_8 = 1;
+const int ISO_8859_1 = 2;
+
+int identifyCharset(const string &text);
+
 
 #endif

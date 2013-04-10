@@ -12,11 +12,11 @@ int main(int argc, char** argv) {
   //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
   //string indexFileName("index-small.txt");
 
-  //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
-  //string indexFileName("index.txt");
+  string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
+  string indexFileName("index.txt");
 
-  string inputDirectory("/home/danilo/workspaces/ri/tp1/data");
-  string indexFileName("pagesRICompressed0.index.txt");
+  //string inputDirectory("/home/danilo/workspaces/ri/tp1/data");
+  //string indexFileName("pagesRICompressed0.index.txt");
 
   DocumentSource* source = collectionArchive(inputDirectory, indexFileName);
   Indexer* indexer = createIndexer();

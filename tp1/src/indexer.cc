@@ -3,18 +3,10 @@
 #include <vector>
 #include <algorithm>
 #include "indexer.h"
-#include "temp_file.h"
+#include "file_handler.h"
 #include "heap.h"
 #include "inverted_list.h"
-
-struct VocabularyEntry {
-  int_id id_;
-  int_id df_;
-  VocabularyEntry() {
-    id_ = 0;
-    df_ = 0;
-  }
-};
+#include "vocabulary.h"
 
 struct BucketTriple : public Triple {
   int_id bucket_;
@@ -36,7 +28,7 @@ struct Range {
 class IndexerImpl : public Indexer {
   public:
     IndexerImpl() {
-      tempf_ = tempFile();
+      tempf_ = createFile("buffer.tmp");
     }
     ~IndexerImpl() {
       delete tempf_;
@@ -46,21 +38,19 @@ class IndexerImpl : public Indexer {
       documents_.push_back(url);
     }
     virtual void addTerm(const string &term) {
-      VocabularyEntry &e = map_[term];
-      if (e.id_ == 0) {
-        e.id_ = map_.size();
-      }
-      if (freqMap_.count(e.id_)) {
-        freqMap_[e.id_] = freqMap_[e.id_] + 1;
+      int_id id = vocabulary_.put(term);
+      if (freqMap_.count(id)) {
+        freqMap_[id] = freqMap_[id] + 1;
       } else {
-        freqMap_[e.id_] = 1;
+        vocabulary_.increment(term);
+        freqMap_[id] = 1;
       }
       //e.tf_++;
     }
     virtual void end() {
       endDocument();
       cout << ERASE << documents_.size() <<  " processed" << endl;
-      cout << map_.size() << " distinct terms" << endl;
+      cout << vocabulary_.size() << " distinct terms" << endl;
       cout << totalTriples_ << " triples written to temp file" << endl;
 
       vector<Range> buckets;
@@ -75,15 +65,12 @@ class IndexerImpl : public Indexer {
     }
   private:
     vector<string> documents_;
-    unordered_map<string, VocabularyEntry> map_;
+    Vocabulary vocabulary_;
     unordered_map<int_id, int_id> freqMap_;
-    TempFile* tempf_;
+    FileHandler* tempf_;
     size_t totalTriples_ = 0;
     size_t bucketSize_ = 1048576;
 
-    void writeDocumentTerms() {
-
-    }
     void print() {
       //for (auto& entry: map_) {
         //cout << entry.second.id_ << " " << entry.first << " " << entry.second.df_ << endl;
@@ -102,9 +89,6 @@ class IndexerImpl : public Indexer {
         tempf_->writeInt(currentDoc);
         tempf_->writeInt(entry.second);
         totalTriples_++;
-
-        // clear tf count to 
-        //entry.second.df_++;
       }
 
       freqMap_.erase(freqMap_.begin(), freqMap_.end());
@@ -169,7 +153,7 @@ class IndexerImpl : public Indexer {
       // construct a heap in the buffer
       buildMinHeap(buffer);
 
-      InvertedListWriter* writer = createInvertedListWriter();
+      InvertedListWriter* writer = createInvertedListWriter(vocabulary_);
       // pick the smallest triple, one by one, refilling the buffer
       for (size_t i = 0; buffer.size() > 0; i++) {
         BucketTriple min = buffer[0];

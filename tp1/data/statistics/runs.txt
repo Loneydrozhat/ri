@@ -1,0 +1,12 @@
+=== Coleção full
+Processing documents...
+945642 processed
+7988380 distinct terms
+220444861 triples written to temp file
+Sorting blocks...
+211 of 211
+Merging blocks...
+100%
+Inverted lists generated
+Elapsed time 3312s
+

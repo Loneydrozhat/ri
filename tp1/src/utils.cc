@@ -1,4 +1,3 @@
-//#include <codecvt>
 #include "utils.h"
 
 string stripHttpHeaders(const string &text) {
@@ -42,19 +41,39 @@ string stripSpecialChars(const string &input) {
   return "";
 }
 
-
-/*
-// convert UTF-8 string to wstring
-wstring utf8_to_wstring (const string& str)
-{
-    wstring_convert<codecvt_utf8<wchar_t>> myconv;
-    return myconv.from_bytes(str);
+int identifyCharset(const string &text) {
+  size_t found = text.find("charset=");
+  if (found < text.length()) {
+    string charset = text.substr(found + 8, 3);
+    lowerString(charset);
+    if (charset == "iso") {
+      return ISO_8859_1;
+    } else if (charset == "utf") {
+      return UTF_8;
+    }
+  }
+  return UNKNOWN;  
 }
 
-// convert wstring to UTF-8 string
-string wstring_to_utf8 (const wstring& str)
+/*
 {
-    wstring_convert<codecvt_utf8<wchar_t>> myconv;
-    return myconv.to_bytes(str);
+  char src[] = "";
+  strcpy((char*) src, buf.c_str());
+
+  char dst[2 * buf.length()];
+  size_t srclen = buf.length();
+  size_t dstlen = 2 * buf.length();
+
+  fprintf(stderr, "in: %s\n", src);
+
+  char * pIn = src;
+  char * pOut = (char*) dst;
+
+  iconv_t conv = iconv_open("UTF-8", "ISO-8859-1");
+  iconv(conv, &pIn, &srclen, &pOut, &dstlen);
+  iconv_close(conv);
+  pOut[srclen] = '\0';
+
+  fprintf(stderr, "out: %s\n\n", dst);
 }
 */

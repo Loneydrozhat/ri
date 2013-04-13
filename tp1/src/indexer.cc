@@ -56,12 +56,9 @@ class IndexerImpl : public Indexer {
       vector<Range> buckets;
       sortBuckets(buckets);
       
-
       cout << "Merging blocks..." << endl;
       writeInvertedList(buckets);
       cout << "Inverted lists generated" << endl;
-
-      print();
     }
   private:
     vector<string> documents_;
@@ -71,12 +68,6 @@ class IndexerImpl : public Indexer {
     size_t totalTriples_ = 0;
     size_t bucketSize_ = 1048576;
 
-    void print() {
-      //for (auto& entry: map_) {
-        //cout << entry.second.id_ << " " << entry.first << " " << entry.second.df_ << endl;
-      //}
-      //cout << "Total size: " << map_.size() << endl;
-    }
     void endDocument() {
       int_id currentDoc = documents_.size();
       if (currentDoc == 0) {
@@ -98,6 +89,7 @@ class IndexerImpl : public Indexer {
       }
     }
 
+    // Sort a block of triples and write in the temp file from [start, start + offset]
     void sortTriples(vector<Triple> &buffer, const size_t start, const unsigned int offset) {
       Triple triple;
       ifstream::pos_type startByte = start * 3 * sizeof(int_id);
@@ -153,7 +145,7 @@ class IndexerImpl : public Indexer {
       // construct a heap in the buffer
       buildMinHeap(buffer);
 
-      InvertedListWriter* writer = createInvertedListWriter(vocabulary_);
+      InvertedListWriter* writer = createInvertedListWriter(vocabulary_, "index");
       // pick the smallest triple, one by one, refilling the buffer
       for (size_t i = 0; buffer.size() > 0; i++) {
         BucketTriple min = buffer[0];

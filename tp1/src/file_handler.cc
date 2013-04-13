@@ -73,3 +73,7 @@ class FileHandlerImpl : public FileHandler {
 FileHandler* createFile(const string &name) {
   return new FileHandlerImpl(name, true);
 }
+
+FileHandler* openFile(const string &name) {
+  return new FileHandlerImpl(name, false);
+}

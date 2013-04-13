@@ -25,9 +25,16 @@ class Vocabulary {
       }
       return e.id_;
     }
+    virtual unordered_map<string, VocabularyEntry>::const_iterator find(const string &term) {
+      return map_.find(term);
+    }
     virtual void increment(const string &term) {
       VocabularyEntry &e = map_[term];
       e.df_++;
+    }
+    virtual void setDf(const string &term, int_id df) {
+      VocabularyEntry &e = map_[term];
+      e.df_ = df;
     }
     virtual size_t size() {
       return map_.size();

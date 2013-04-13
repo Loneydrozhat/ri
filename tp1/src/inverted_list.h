@@ -7,10 +7,19 @@
 
 using namespace std;
 
+struct TermOccurrence {
+  int_id doc_;
+  int_id tf_;
+};
+
 class InvertedList {
   public:
     virtual ~InvertedList() {}
+    virtual unsigned int countDocs(const string &term) = 0;
+    virtual void findDocs(const string &term, vector<TermOccurrence> &docsList) = 0;
 };
+
+InvertedList* openInvertedList(const string &filename);
 
 class InvertedListWriter {
   public:
@@ -19,6 +28,6 @@ class InvertedListWriter {
     virtual void close() {}
 };
 
-InvertedListWriter* createInvertedListWriter(Vocabulary &vocabulary);
+InvertedListWriter* createInvertedListWriter(Vocabulary &vocabulary, const string &filename);
 
 #endif

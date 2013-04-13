@@ -12,3 +12,7 @@ add_test(CollectionProcessor CollectionProcessorTest)
 add_executable(UtilsTest utils_test)
 target_link_libraries(UtilsTest indexer gmock gmock_main pthread htmlcxx RICPlib)
 add_test(UtilsTest UtilsTest)
+
+add_executable(InvertedListTest inverted_list_test)
+target_link_libraries(InvertedListTest indexer gmock gmock_main pthread htmlcxx RICPlib)
+add_test(InvertedListTest InvertedListTest)

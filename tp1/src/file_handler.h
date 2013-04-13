@@ -21,6 +21,8 @@ class FileHandler {
 
 FileHandler* createFile(const string &name);
 
+FileHandler* openFile(const string &name);
+
 template<class T>
 T readNumber(fstream &file) {
   if (file.eof()) {

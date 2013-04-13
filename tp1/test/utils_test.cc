@@ -6,13 +6,13 @@
 
 using namespace std;
 
-TEST(stripHttpHeaders, preserveOriginal) {
+TEST(stripHttpHeaders, shouldPreserveOriginal) {
   string original = "some random stuff.";
   string result = stripHttpHeaders(original);
   ASSERT_EQ(original, result);
 }
 
-TEST(stripHttpHeaders, stripHeaders) {
+TEST(stripHttpHeaders, shouldStripHeaders) {
   string original = 
     "HTTP/1.1 200 OK\n"
     "Date: Mon, 09 Mar 2009 20:49:35 GMT\n"
@@ -27,23 +27,23 @@ TEST(stripHttpHeaders, stripHeaders) {
   ASSERT_EQ("<html><body>content</body></html>", result);
 }
 
-TEST(stripSpecialChars, removePontuationFromSuffix) {
+TEST(stripSpecialChars, shouldRemovePontuationFromSuffix) {
   ASSERT_EQ("danilo", stripSpecialChars("danilo!"));
   ASSERT_EQ("danilo", stripSpecialChars("danilo.?;:"));
 }
 
-TEST(stripSpecialChars, removePontuationFromPrefix) {
+TEST(stripSpecialChars, shouldRemovePontuationFromPrefix) {
   ASSERT_EQ("danilo", stripSpecialChars(":danilo"));
   ASSERT_EQ("danilo", stripSpecialChars("([{danilo"));
 }
 
-TEST(stripSpecialChars, stripNonVisible) {
+TEST(stripSpecialChars, shouldStripNonVisible) {
   ASSERT_EQ("danilo", stripSpecialChars("\t danilo"));
   ASSERT_EQ("danilo", stripSpecialChars(" danilo\r\n "));
 }
 
-TEST(FileHandler, writeAndReadInts) {
-  FileHandler* tempf = createFile("buffer.tmp");
+TEST(FileHandler, shouldWriteAndReadInts) {
+  FileHandler* tempf = createFile("b1.tmp");
   tempf->writeInt(1);
   tempf->writeInt(2);
   tempf->writeInt(3000000000);
@@ -59,8 +59,8 @@ TEST(FileHandler, writeAndReadInts) {
   delete tempf;
 }
 
-TEST(FileHandler, writeAndReadStrings) {
-  FileHandler* tempf = createFile("buffer.tmp");
+TEST(FileHandler, shouldWriteAndReadStrings) {
+  FileHandler* tempf = createFile("b2.tmp");
   tempf->writeString("foo");
   tempf->writeString("bar");
   tempf->writeString("baz");

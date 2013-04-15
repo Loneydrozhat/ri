@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   initArgs(argc, argv, inputDirectory, indexFileName, bufferSize);
 
   //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
-  //string indexFileName("index-small.txt");
+  //string indexFileName("index-5k.txt");
 
   //string inputDirectory("/media/danilo/Users/Danilo/Workspaces/ri2013/data");
   //string indexFileName("index.txt");

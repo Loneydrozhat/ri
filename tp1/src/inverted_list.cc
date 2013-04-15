@@ -2,6 +2,45 @@
 #include "inverted_list.h"
 #include "file_handler.h"
 
+class OccurrenceIterator {
+  public:
+    OccurrenceIterator(FileHandler* listsFile, ifstream::pos_type pos, unsigned int size) {
+      listsFile_ = listsFile;
+      pos_ = pos;
+      itemsToRead_ = size;
+      if (!end()) {
+        read();
+      }
+    }
+    void next() {
+      if (!end()) {
+        read();
+        itemsToRead_--;
+      }
+    }
+    bool end() {
+      return itemsToRead_ <= 0;
+    }
+    int_id getDoc() {
+      return doc_;
+    }
+    int_id getTf() {
+      return tf_;
+    }
+  private:
+    FileHandler* listsFile_;
+    ifstream::pos_type pos_;
+    unsigned int itemsToRead_;
+    int_id doc_;
+    int_id tf_;
+    void read() {
+      listsFile_->setSeekPos(pos_);
+      doc_ = listsFile_->readInt();
+      tf_ = listsFile_->readInt();
+      pos_ += 2*sizeof(int_id);
+    }
+};
+
 class InvertedListImpl : public InvertedList {
   public:
     InvertedListImpl(const string &filename) {
@@ -19,9 +58,11 @@ class InvertedListImpl : public InvertedList {
 
       listsFile_ = openFile(baseFileName + ".idx");
     }
+
     virtual ~InvertedListImpl() {
       delete listsFile_;
     }
+
     virtual unsigned int countDocs(const string &term) {
       unordered_map<string, VocabularyEntry>::const_iterator it = vocabulary_.find(term);
       if (it == vocabulary_.end()) {
@@ -29,7 +70,8 @@ class InvertedListImpl : public InvertedList {
       }
       return it->second.df_;
     }
-    virtual void findDocs(const string &term, vector<TermOccurrence> &docsList) {
+
+    virtual void listDocs(vector<int_id> &docsList, const string &term) {
       docsList.erase(docsList.begin(), docsList.end());
       unordered_map<string, VocabularyEntry>::const_iterator it = vocabulary_.find(term);
       if (it == vocabulary_.end()) {
@@ -38,14 +80,12 @@ class InvertedListImpl : public InvertedList {
       VocabularyEntry entry = it->second;
       unsigned int docsCount = entry.df_;
       docsList.reserve(docsCount);
-      listsFile_->setSeekPos(pointers_[entry.id_]);
-      for (unsigned int i = 0; i < docsCount; i++) {
-        TermOccurrence occurrence;
-        occurrence.doc_ = listsFile_->readInt();
-        occurrence.tf_ = listsFile_->readInt();
-        docsList.push_back(occurrence);
+      
+      for (OccurrenceIterator it(listsFile_, pointers_[entry.id_], docsCount); !it.end(); it.next()) {
+        docsList.push_back(it.getDoc());
       }
     }
+
   private:
     Vocabulary vocabulary_;
     vector<ifstream::pos_type> pointers_;
@@ -77,6 +117,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
       listsFile_->writeInt(tf);
     }
     virtual void close() {
+      listsFile_->close();
       FileHandler* vocabularyFile = createFile(baseFileName_ + ".voc");
       vocabularyFile->writeInt(vocabulary_->size());
       for (auto it = vocabulary_->begin(); it != vocabulary_->end(); it++) {
@@ -85,6 +126,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
         vocabularyFile->writeInt(entry.df_);
         vocabularyFile->writeFilePointer(pointers_[entry.id_]);
       }
+      vocabularyFile->close();
       delete vocabularyFile;
     };
   private:

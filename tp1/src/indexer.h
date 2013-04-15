@@ -32,6 +32,6 @@ class Indexer {
     virtual ~Indexer() {}
 };
 
-Indexer* createIndexer();
+Indexer* createIndexer(size_t bufferSize);
 
 #endif

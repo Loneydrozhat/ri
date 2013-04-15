@@ -62,6 +62,14 @@ class FileHandlerImpl : public FileHandler {
       return file_.tellg();
     }
 
+    virtual void flush() {
+      file_.flush();
+    }
+
+    virtual void close() {
+      file_.close();
+    }
+
   private:
     fstream file_;
     ifstream::pos_type size_;

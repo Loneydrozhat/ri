@@ -22,3 +22,11 @@ build
 # Eclipse metadata
 .project
 .cproject
+
+# Latex
+*.dvi
+*.log
+*.bbl
+*.blg
+*.aux
+*.synctex.gz

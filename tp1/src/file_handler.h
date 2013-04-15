@@ -17,6 +17,8 @@ class FileHandler {
     virtual void writeString(const string &input) = 0;
     virtual void setSeekPos(const ifstream::pos_type pos) = 0;
     virtual ifstream::pos_type getSeekPos() = 0;
+    virtual void flush() = 0;
+    virtual void close() = 0;
 };
 
 FileHandler* createFile(const string &name);

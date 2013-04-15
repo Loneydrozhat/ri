@@ -2,21 +2,17 @@
 #define __INVERTED_LIST_H__
 
 #include <string>
+#include <vector>
 #include "utils.h"
 #include "vocabulary.h"
 
 using namespace std;
 
-struct TermOccurrence {
-  int_id doc_;
-  int_id tf_;
-};
-
 class InvertedList {
   public:
     virtual ~InvertedList() {}
     virtual unsigned int countDocs(const string &term) = 0;
-    virtual void findDocs(const string &term, vector<TermOccurrence> &docsList) = 0;
+    virtual void listDocs(vector<int_id> &docsList, const string &term) = 0;
 };
 
 InvertedList* openInvertedList(const string &filename);

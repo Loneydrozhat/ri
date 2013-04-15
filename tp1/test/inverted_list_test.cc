@@ -2,61 +2,106 @@
 #include "gtest/gtest.h"
 #include "utils.h"
 #include "vocabulary.h"
+#include "document_source_mock.h"
+#include "indexer.h"
+#include "collection_processor.h"
 #include "inverted_list.h"
 
 using namespace std;
+using ::testing::InSequence;
+using ::testing::Return;
 
-TEST(InvertedList, shouldFindNoDocs) {
-  Vocabulary voc;
-  InvertedListWriter* writer = createInvertedListWriter(voc, "t1");
-  writer->close();
-  delete writer;
+class InvertedListTest : public ::testing::Test {
+ protected:
+  virtual void SetUp() {
+    {
+      InSequence expect;
+      EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(true));
+      EXPECT_CALL(docSource_, getUrl()).WillOnce(Return("1"));
+      EXPECT_CALL(docSource_, getText()).WillOnce(Return("Pease porridge hot, pease porridge cold,"));
+      EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(true));
+      EXPECT_CALL(docSource_, getUrl()).WillOnce(Return("2"));
+      EXPECT_CALL(docSource_, getText()).WillOnce(Return("Pease porridge in the pot, nine hot days old;"));
+      EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(true));
+      EXPECT_CALL(docSource_, getUrl()).WillOnce(Return("3"));
+      EXPECT_CALL(docSource_, getText()).WillOnce(Return("Some like it hot, some like it cold,"));
+      EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(true));
+      EXPECT_CALL(docSource_, getUrl()).WillOnce(Return("4"));
+      EXPECT_CALL(docSource_, getText()).WillOnce(Return("Some like it in the pot, nine days old"));
+      EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(false));
+    }
 
-  InvertedList* reader = openInvertedList("t1");
-  ASSERT_EQ((unsigned int) 0, reader->countDocs("danilo"));
+    indexer_ = createIndexer(10);
+
+    CollectionProcessor processor(&docSource_, indexer_);
+    processor.process();
+  }
+
+  virtual void TearDown() {
+    delete indexer_;
+  }
+
+  DocumentSourceMock docSource_;
+  Indexer* indexer_;
+};
+
+TEST_F(InvertedListTest, shouldCountDocs) {
+  InvertedList* reader = openInvertedList("index");
+  ASSERT_EQ((unsigned int) 0, reader->countDocs("foo"));
+  ASSERT_EQ((unsigned int) 2, reader->countDocs("pease"));
+  ASSERT_EQ((unsigned int) 2, reader->countDocs("porridge"));
+  ASSERT_EQ((unsigned int) 2, reader->countDocs("like"));
+  ASSERT_EQ((unsigned int) 2, reader->countDocs("cold"));
+
   delete reader;
 }
 
-TEST(InvertedList, shouldFindOneDoc) {
-  Vocabulary voc;
-  voc.put("danilo");
-  voc.increment("danilo");
-  InvertedListWriter* writer = createInvertedListWriter(voc, "t2");
-  writer->writeEntry(1, 1, 1);
-  writer->close();
-  delete writer;
+TEST_F(InvertedListTest, shouldListDocs) {
+  InvertedList* reader = openInvertedList("index");
 
-  InvertedList* reader = openInvertedList("t2");
-  ASSERT_EQ((unsigned int) 1, reader->countDocs("danilo"));
+  vector<int_id> ocurrences;
+  reader->listDocs(ocurrences, "porridge");
+  ASSERT_EQ((unsigned int) 2, ocurrences.size());
+
+  ASSERT_EQ((unsigned int) 1, ocurrences[0]);
+  ASSERT_EQ((unsigned int) 2, ocurrences[1]);
+  
   delete reader;
 }
 
-TEST(InvertedList, shouldFindDocs) {
-  Vocabulary voc;
-  voc.put("danilo");
-  voc.setDf("danilo", 2);
-  voc.put("ferreira");
-  voc.setDf("ferreira", 1);
-  InvertedListWriter* writer = createInvertedListWriter(voc, "t3");
-  writer->writeEntry(1, 1, 1);
-  writer->writeEntry(1, 2, 3);
-  writer->writeEntry(2, 1, 1);
-  writer->close();
-  delete writer;
+/*
+TEST_F(InvertedListTest, shouldListDocsIntersection) {
 
-  InvertedList* reader = openInvertedList("t3");
-  ASSERT_EQ((unsigned int) 2, reader->countDocs("danilo"));
+  InvertedList* reader = openInvertedList("index");
 
   vector<TermOccurrence> ocurrences;
-  reader->findDocs("danilo", ocurrences);
+  reader->listDocs(ocurrences, "hot");
+  ASSERT_EQ((unsigned int) 3, ocurrences.size());
+
+  reader->listDocsIntersection(ocurrences, "porridge");
   ASSERT_EQ((unsigned int) 2, ocurrences.size());
 
   ASSERT_EQ((unsigned int) 1, ocurrences[0].doc_);
-  ASSERT_EQ((unsigned int) 1, ocurrences[0].tf_);
-
   ASSERT_EQ((unsigned int) 2, ocurrences[1].doc_);
-  ASSERT_EQ((unsigned int) 3, ocurrences[1].tf_);
-  
-  ASSERT_EQ((unsigned int) 1, reader->countDocs("ferreira"));
+
   delete reader;
 }
+
+TEST_F(InvertedListTest, shouldListDocsUnion) {
+
+  InvertedList* reader = openInvertedList("index");
+
+  vector<TermOccurrence> ocurrences;
+  reader->listDocs(ocurrences, "like");
+  ASSERT_EQ((unsigned int) 2, ocurrences.size());
+
+  reader->listDocsUnion(ocurrences, "nine");
+  ASSERT_EQ((unsigned int) 3, ocurrences.size());
+
+  ASSERT_EQ((unsigned int) 2, ocurrences[0].doc_);
+  ASSERT_EQ((unsigned int) 3, ocurrences[1].doc_);
+  ASSERT_EQ((unsigned int) 4, ocurrences[2].doc_);
+
+  delete reader;
+}
+*/

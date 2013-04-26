@@ -123,6 +123,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
       for (auto it = vocabulary_->begin(); it != vocabulary_->end(); it++) {
         VocabularyEntry &entry = it->second;
         vocabularyFile->writeString(it->first);
+        //cout << it->first << endl;
         vocabularyFile->writeInt(entry.df_);
         vocabularyFile->writeFilePointer(pointers_[entry.id_]);
       }

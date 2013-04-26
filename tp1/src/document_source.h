@@ -10,6 +10,7 @@ class DocumentSource {
     virtual bool fetchNext() = 0;
     virtual string getUrl() = 0;
     virtual string getText() = 0;
+    virtual int getCharset() = 0;
     virtual ~DocumentSource() {}
 };
 

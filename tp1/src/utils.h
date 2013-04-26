@@ -15,7 +15,11 @@ string stripHttpHeaders(const string &text);
 
 void lowerString(string &input);
 
-string stripSpecialChars(const string &input);
+//string stripSpecialChars(const string &input);
+
+//bool isPrintableChar(const char &c);
+
+bool isAlphaNum(char c);
 
 struct IoException : public runtime_error {
     explicit IoException(const string &msg):runtime_error(msg){};
@@ -26,6 +30,5 @@ const int UTF_8 = 1;
 const int ISO_8859_1 = 2;
 
 int identifyCharset(const string &text);
-
 
 #endif

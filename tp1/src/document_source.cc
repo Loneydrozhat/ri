@@ -2,6 +2,7 @@
 #include <iostream>
 #include "document_source.h"
 #include "CollectionReader.h"
+#include "utils.h"
 
 using namespace std;
 using namespace RICPNS;
@@ -9,28 +10,34 @@ using namespace RICPNS;
 class CollectionArchive : public DocumentSource {
   public:
     CollectionArchive(const string &inputDirectory, const string &indexFileName) {
-      reader = new CollectionReader(inputDirectory, indexFileName);
+      reader_ = new CollectionReader(inputDirectory, indexFileName);
     }
     virtual bool fetchNext() {
-      if (reader->getNextDocument(doc)) {
-        doc.setText(stripHttpHeaders(doc.getText()));
+      if (reader_->getNextDocument(doc_)) {
+        const string text = doc_.getText();
+        charset_ = identifyCharset(text);
+        doc_.setText(stripHttpHeaders(text));
         return true;
       }
       return false;
     }
     virtual string getUrl() {
-      return doc.getURL();
+      return doc_.getURL();
     };
     virtual string getText() {
-      return doc.getText();
+      return doc_.getText();
+    };
+    virtual int getCharset() {
+      return charset_;
     };
     virtual ~CollectionArchive() {
-      doc.clear();
-      delete reader;
+      doc_.clear();
+      delete reader_;
     }
   private:
-    Document doc;
-    CollectionReader* reader;
+    Document doc_;
+    CollectionReader* reader_;
+    int charset_;
 };
 
 DocumentSource* collectionArchive(const string &inputDirectory, const string &indexFileName) {

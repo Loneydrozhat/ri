@@ -9,6 +9,7 @@ class DocumentSourceMock : public DocumentSource {
     MOCK_METHOD0(fetchNext, bool());
     MOCK_METHOD0(getUrl, string());
     MOCK_METHOD0(getText, string());
+    MOCK_METHOD0(getCharset, int());
 };
 
 #endif

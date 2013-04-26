@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "file_handler.h"
 #include "heap.h"
+#include "string_tokenizer.h"
 
 using namespace std;
 
@@ -27,20 +28,6 @@ TEST(stripHttpHeaders, shouldStripHeaders) {
   ASSERT_EQ("<html><body>content</body></html>", result);
 }
 
-TEST(stripSpecialChars, shouldRemovePontuationFromSuffix) {
-  ASSERT_EQ("danilo", stripSpecialChars("danilo!"));
-  ASSERT_EQ("danilo", stripSpecialChars("danilo.?;:"));
-}
-
-TEST(stripSpecialChars, shouldRemovePontuationFromPrefix) {
-  ASSERT_EQ("danilo", stripSpecialChars(":danilo"));
-  ASSERT_EQ("danilo", stripSpecialChars("([{danilo"));
-}
-
-TEST(stripSpecialChars, shouldStripNonVisible) {
-  ASSERT_EQ("danilo", stripSpecialChars("\t danilo"));
-  ASSERT_EQ("danilo", stripSpecialChars(" danilo\r\n "));
-}
 
 TEST(FileHandler, shouldWriteAndReadInts) {
   FileHandler* tempf = createFile("b1.tmp");
@@ -125,4 +112,55 @@ TEST(identifyCharset, shouldReturnUnknown) {
   ASSERT_EQ(UNKNOWN, identifyCharset("some random text"));
   ASSERT_EQ(UNKNOWN, identifyCharset("iso-8859-1"));
   ASSERT_EQ(UNKNOWN, identifyCharset("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=other\">"));
+}
+
+
+TEST(StringTokenizer, doNothingWithEmptyString) {
+  string input = "";
+  StringTokenizer* st = stringTokenizer(&input, UTF_8);
+  string term;
+  ASSERT_FALSE(st->fetch(term));
+  delete st;
+}
+
+TEST(StringTokenizer, fetchSingleTerm) {
+  string input = "danilo";
+  StringTokenizer* st = stringTokenizer(&input, UTF_8);
+  string term;
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("danilo", term);
+  ASSERT_FALSE(st->fetch(term));
+  delete st;
+}
+
+TEST(StringTokenizer, fetchMultipleTerms) {
+  string input = "t1 t2";
+  StringTokenizer* st = stringTokenizer(&input, UTF_8);
+  string term;
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("t1", term);
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("t2", term);
+  ASSERT_FALSE(st->fetch(term));
+  delete st;
+}
+
+TEST(StringTokenizer, lowerTerms) {
+  string input = "Danilo";
+  StringTokenizer* st = stringTokenizer(&input, UTF_8);
+  string term;
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("danilo", term);
+  delete st;
+}
+
+TEST(StringTokenizer, replaceHtmlEntities) {
+  string input = "Danilo&nbsp;Ferr&amp;";
+  StringTokenizer* st = stringTokenizer(&input, UTF_8);
+  string term;
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("danilo", term);
+  ASSERT_TRUE(st->fetch(term));
+  ASSERT_EQ("ferr", term);
+  delete st;
 }

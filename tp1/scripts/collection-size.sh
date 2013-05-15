@@ -20,6 +20,6 @@ echo ''
 ./src/indexp -d /media/danilo/Users/Danilo/Workspaces/ri2013/data -i index-400k.txt -b 16000
 rm buffer.tmp index.idx index.voc
 echo ''
-#./src/indexp -d /media/danilo/Users/Danilo/Workspaces/ri2013/data -i index.txt -b 16000
-#rm buffer.tmp index.idx index.voc
-#echo ''
+./src/indexp -d /media/danilo/Users/Danilo/Workspaces/ri2013/data -i index.txt -b 16000
+rm buffer.tmp index.idx index.voc
+echo ''

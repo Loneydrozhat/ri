@@ -45,7 +45,7 @@ class InvertedListImpl : public InvertedList {
   public:
     InvertedListImpl(const string &filename) {
       string baseFileName = filename;
-      FileHandler* vocabularyFile = openFile(baseFileName + ".voc");
+      FileHandler* vocabularyFile = openFile(baseFileName + ".vocabulary.dat");
       unsigned int vocSize = vocabularyFile->readInt();
       for (unsigned int i = 0; i < vocSize; i++) {
         string term = vocabularyFile->readString();
@@ -56,7 +56,7 @@ class InvertedListImpl : public InvertedList {
       }
       delete vocabularyFile;
 
-      listsFile_ = openFile(baseFileName + ".idx");
+      listsFile_ = openFile(baseFileName + ".index.dat");
     }
 
     virtual ~InvertedListImpl() {
@@ -101,7 +101,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
     InvertedListWriterImpl(Vocabulary* vocabulary, const string &filename) {
       vocabulary_ = vocabulary;
       baseFileName_ = filename;
-      listsFile_ = createFile(baseFileName_ + ".idx");
+      listsFile_ = createFile(baseFileName_ + ".index.dat");
       pointers_.reserve(vocabulary->size());
     }
     virtual ~InvertedListWriterImpl() {
@@ -118,7 +118,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
     }
     virtual void close() {
       listsFile_->close();
-      FileHandler* vocabularyFile = createFile(baseFileName_ + ".voc");
+      FileHandler* vocabularyFile = createFile(baseFileName_ + ".vocabulary.dat");
       vocabularyFile->writeInt(vocabulary_->size());
       for (auto it = vocabulary_->begin(); it != vocabulary_->end(); it++) {
         VocabularyEntry &entry = it->second;

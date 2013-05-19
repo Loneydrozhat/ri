@@ -27,8 +27,10 @@ struct Range {
 
 class IndexerImpl : public Indexer {
   public:
-    IndexerImpl(size_t bufferSize) {
-      tempf_ = createFile("buffer.tmp");
+    IndexerImpl(size_t bufferSize, const string &filename) {
+      filename_ = filename;
+      tempf_ = createFile(filename + ".buffer.dat");
+      docsFile_.open(filename + ".docs.txt");
       bufferSize_ = bufferSize;
       t0_ = time(NULL);
     }
@@ -51,6 +53,9 @@ class IndexerImpl : public Indexer {
     virtual void end() {
       endDocument();
       tempf_->flush();
+
+      docsFile_.close();
+
       unsigned int tt = time(NULL) - t0_;
       cout << ERASE << documents_.size() <<  " processed in " << tt << "s" << endl;
       cout << "Vocabulary size: " << vocabulary_.size() << endl;
@@ -67,6 +72,8 @@ class IndexerImpl : public Indexer {
     Vocabulary vocabulary_;
     unordered_map<int_id, int_id> freqMap_;
     FileHandler* tempf_;
+    ofstream docsFile_;
+    string filename_;
     size_t totalTriples_ = 0;
     size_t bufferSize_;
     unsigned int t0_;
@@ -77,13 +84,23 @@ class IndexerImpl : public Indexer {
         return;
       }
 
+      unsigned int docLength = 0;
+      unsigned int docNorm = 0;
+
       for (auto& entry: freqMap_) {
+        int_id term = entry.first;
+        int_id tf = entry.second;
+        docLength += tf;
+        docNorm += tf * tf;
+
         // write triples <term, doc, tf> on temp file
-        tempf_->writeInt(entry.first);
+        tempf_->writeInt(term);
         tempf_->writeInt(currentDoc);
-        tempf_->writeInt(entry.second);
+        tempf_->writeInt(tf);
         totalTriples_++;
       }
+
+      docsFile_ << documents_[currentDoc - 1] << " " << docLength << " " << docNorm << endl;
 
       freqMap_.erase(freqMap_.begin(), freqMap_.end());
 
@@ -154,7 +171,7 @@ class IndexerImpl : public Indexer {
       // construct a heap in the buffer
       buildMinHeap(buffer);
 
-      InvertedListWriter* writer = createInvertedListWriter(vocabulary_, "index");
+      InvertedListWriter* writer = createInvertedListWriter(vocabulary_, filename_);
       // pick the smallest triple, one by one, refilling the buffer
       for (size_t i = 0; buffer.size() > 0; i++) {
         BucketTriple min = buffer[0];
@@ -194,6 +211,6 @@ class IndexerImpl : public Indexer {
     }
 };
 
-Indexer* createIndexer(size_t bufferSize) {
-  return new IndexerImpl(bufferSize);
+Indexer* createIndexer(size_t bufferSize, const string &filename) {
+  return new IndexerImpl(bufferSize, filename);
 }

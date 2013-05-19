@@ -1,0 +1,17 @@
+@(query: String = "")
+
+@helper.form(action = routes.Application.search, 'method -> "GET") {
+  <div class="input-append">
+    <input id="query" name="query" class="input-xlarge" type="text" value="@query">
+    <button class="btn" type="submit">Buscar</button>
+  </div>
+  
+  @if(query == ""){
+    <script>
+      $(function() {
+        $("#query").focus();
+      });
+    </script>
+  }
+  
+}

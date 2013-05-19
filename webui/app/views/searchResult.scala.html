@@ -1,0 +1,17 @@
+@(query: String, documents: List[QueryResult])
+
+@main("Resultados da busca: " + query) {
+  
+  @searchForm(query)
+  
+  <hr>
+
+  <div class="row-fluid">
+    <ul>
+    @for(doc <- documents) {
+	    <li>@doc.url</li>
+    }
+    </ul>
+  </div>
+  
+}

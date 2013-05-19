@@ -1,0 +1,36 @@
+algo.txt
+========
+
+estrutura de dados acumuladores (map cuja chave é d)
+
+q: termos da consulta Q:
+- ordenar por idf
+
+para cada t E Q
+  para cada d E listaQ
+    se nao tem acumulador e pode criar
+      cria
+    .
+    A_d += w
+  .
+.
+
+h <- heap de tamanho r
+para cada acumulador a em A && <= r
+  coloca a/W_d em H
+.
+para cada acumulador a em A && > r
+  se a/W_d > min{h} coloca no heap
+.
+ordena o min heap decrescente
+
+
+weighting schemes:
+- cosine
+  w_t = log(1 + N/f_t)
+  w_d,t = (1 + log(f_d,t)) * w_t
+  W_d = sqrt(somatorio w_dt)
+  sim(Q,D) = (1/W_d) * Somatorio w_d,t
+
+- bm25
+  

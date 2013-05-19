@@ -30,3 +30,9 @@ build
 *.blg
 *.aux
 *.synctex.gz
+
+# Play framework
+.target
+bin
+.cache
+.project

@@ -7,11 +7,19 @@
   <hr>
 
   <div class="row-fluid">
-    <ul>
-    @for(doc <- documents) {
-	    <li>@doc.url</li>
+    
+    @if(documents.isEmpty) {
+      
+      <div>Nenhum documento encontrado.</div>
+      
+    } else {
+      <ul>
+      @for(doc <- documents) {
+  	    <li><a href="@doc.url" target="_blank">@doc.url</a></li>
+      }
+      </ul>
     }
-    </ul>
+  
   </div>
   
 }

@@ -85,13 +85,14 @@ class IndexerImpl : public Indexer {
       }
 
       unsigned int docLength = 0;
-      unsigned int docNorm = 0;
+      float docNorm = 0.0;
 
       for (auto& entry: freqMap_) {
         int_id term = entry.first;
         int_id tf = entry.second;
         docLength += tf;
-        docNorm += tf * tf;
+        float wt = 1 + log(tf);
+        docNorm += wt * wt;
 
         // write triples <term, doc, tf> on temp file
         tempf_->writeInt(term);
@@ -99,6 +100,8 @@ class IndexerImpl : public Indexer {
         tempf_->writeInt(tf);
         totalTriples_++;
       }
+
+      docNorm = sqrt(docNorm);
 
       docsFile_ << documents_[currentDoc - 1] << " " << docLength << " " << docNorm << endl;
 

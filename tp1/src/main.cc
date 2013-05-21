@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 #include "collection_processor.h"
 
 using namespace std;

@@ -31,7 +31,7 @@ class InvertedListTest : public ::testing::Test {
       EXPECT_CALL(docSource_, fetchNext()).WillOnce(Return(false));
     }
 
-    indexer_ = createIndexer(10);
+    indexer_ = createIndexer(10, "test");
 
     CollectionProcessor processor(&docSource_, indexer_);
     processor.process();

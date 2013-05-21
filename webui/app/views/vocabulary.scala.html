@@ -1,0 +1,11 @@
+@(terms: Iterable[TermEntry])
+
+@main("Vocabulário") {
+  
+  <table>
+    @for(entry <- terms) {
+	    <tr><td>@entry.term</td><td>@entry.totalFreq</td></tr>
+    }
+  </table>
+  
+}

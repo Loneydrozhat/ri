@@ -1,11 +1,9 @@
-@(query: String, documents: List[QueryResult])
+@(params: SearchParams, documents: List[QueryResult])
 
-@main("Resultados da busca: " + query) {
+@main("Resultados da busca: " + params.query) {
   
-  @searchForm(query)
+  @searchForm(params)
   
-  <hr>
-
   <div class="row-fluid">
     
     @if(documents.isEmpty) {
@@ -13,11 +11,12 @@
       <div>Nenhum documento encontrado.</div>
       
     } else {
-      <ul>
+      <table class="table">
+        <tr><th>Peso</th><th>URL</th></tr>
       @for(doc <- documents) {
-  	    <li><a href="@doc.url" target="_blank">@doc.url</a></li>
+  	    <tr><td>@{"%.3f".format(doc.weight)}</td><td><a href="@doc.url" target="_blank">@doc.url</a></td></tr>
       }
-      </ul>
+      </table>
     }
   
   </div>

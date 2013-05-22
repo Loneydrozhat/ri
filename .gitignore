@@ -36,3 +36,8 @@ build
 bin
 .cache
 .project
+
+#
+cri.docs.txt
+cri.vocabulary.dat
+cri.index.dat

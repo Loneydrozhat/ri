@@ -69,9 +69,6 @@ object Vocabulary {
 
       val size = FileUtils.readBleInt(inputStream, 4)
 
-      print("size ");
-      println(size);
-
       for (i <- 1 to size) {
         val term = FileUtils.readNullTerminatedString(inputStream)
         val totalFreq = FileUtils.readBleInt(inputStream, 4)

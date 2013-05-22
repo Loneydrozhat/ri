@@ -1,12 +1,29 @@
-@(query: String = "")
+@(params: SearchParams)
 
 @helper.form(action = routes.Application.search, 'method -> "GET") {
   <div class="input-append">
-    <input id="query" name="query" class="input-xlarge" type="text" value="@query">
+    <input id="query" name="query" class="input-xlarge" type="text" value="@params.query">
     <button class="btn" type="submit">Buscar</button>
   </div>
+
+  <div class="controls">
+    <input type="text" name="r" class="input-small" value="@params.r"><span class="help-inline">resultados</span>
+  </div>
+  <div class="controls">
+    <input type="text" name="amax" class="input-small" value="@params.amax"><span class="help-inline">acumuladores</span>
+  </div>
+  <div class="controls">
+    <label class="radio">
+      <input type="radio" name="engine" value="vector" @{if (params.engine == "vector") "checked" else ""} >
+      Modelo vetorial
+    </label>
+    <label class="radio">
+      <input type="radio" name="engine" value="bm25" @{if (params.engine == "bm25") "checked" else ""}>
+      Modelo BM25
+    </label>
+  </div>
   
-  @if(query == ""){
+  @if(params.query == ""){
     <script>
       $(function() {
         $("#query").focus();

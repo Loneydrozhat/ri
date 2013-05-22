@@ -19,15 +19,15 @@ public class FileUtils {
 	}
 
 	public static long readBleLong(DataInputStream is, int bytes) throws IOException {
-		byte[] buffer = new byte[bytes];
-		is.readFully(buffer);
 		long num = 0;
 		for (int i = 0; i < bytes; i++) {
-			byte b = buffer[i];
-			if (b == 0x00) {
-				break;
+			int b = is.read();
+			if (b != 0x00) {
+				num += ((long) b) << (i * 8);
 			}
-			num += ((long) b) << (i * 8);
+		}
+		if (num < 0) {
+			System.out.println("ferrou: " + Long.toHexString(num));
 		}
 		return num;
 	}

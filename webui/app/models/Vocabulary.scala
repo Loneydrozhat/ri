@@ -35,11 +35,14 @@ object NilCursor extends OccurencesCursor {
 class OccurencesCursorImpl(val size: Int, indexFile: File, pointer: Long) extends OccurencesCursor {
 
   private val is = new DataInputStream(new BufferedInputStream(new FileInputStream(indexFile)))
-  is.skip(pointer)
+  val skipped = is.skip(pointer)
+  if (skipped != pointer) {
+    throw new RuntimeException("invalid file format")
+  }
 
   var i = 0;
-  var documentId_ = 0;
-  var freq_ = 0;
+  var documentId_ : Int = 0;
+  var freq_ : Int = 0;
 
   def fetchNext: Boolean = {
     if (i >= size) {
@@ -47,6 +50,7 @@ class OccurencesCursorImpl(val size: Int, indexFile: File, pointer: Long) extend
     } else {
       documentId_ = FileUtils.readBleInt(is, 4)
       freq_ = FileUtils.readBleInt(is, 4)
+//      Console.printf("(%d, %d)", documentId_, freq_)
       i += 1
       true
     }
@@ -73,6 +77,9 @@ object Vocabulary {
         val term = FileUtils.readNullTerminatedString(inputStream)
         val totalFreq = FileUtils.readBleInt(inputStream, 4)
         val pointer = FileUtils.readBleLong(inputStream, 16)
+        
+//        Console.printf("%s %d %d\n", term, totalFreq, pointer)
+        
         hmap.put(term, (totalFreq, pointer))
       }
 

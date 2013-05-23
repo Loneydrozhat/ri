@@ -27,7 +27,7 @@ public class FileUtils {
 			}
 		}
 		if (num < 0) {
-			System.out.println("ferrou: " + Long.toHexString(num));
+			throw new RuntimeException("oveflow " + Long.toHexString(num));
 		}
 		return num;
 	}

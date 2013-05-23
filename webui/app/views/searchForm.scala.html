@@ -21,6 +21,13 @@
       <input type="radio" name="engine" value="bm25" @{if (params.engine == "bm25") "checked" else ""}>
       Modelo BM25
     </label>
+      <span class="help-inline">K1 = </span><input type="text" name="k1" class="input-small" value="@params.k1">
+      <span class="help-inline">b = </span><input type="text" name="b" class="input-small" value="@params.b">
+    <label class="radio">
+      <input type="radio" name="engine" value="combined" @{if (params.engine == "combined") "checked" else ""}>
+      Combinação
+    </label>
+      <span class="help-inline">C = </span><input type="text" name="c" class="input-small" value="@params.c">
   </div>
   
   @if(params.query == ""){

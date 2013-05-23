@@ -81,7 +81,7 @@ class InvertedListImpl : public InvertedList {
       unsigned int docsCount = entry.df_;
       docsList.reserve(docsCount);
       
-      for (OccurrenceIterator it(listsFile_, pointers_[entry.id_], docsCount); !it.end(); it.next()) {
+      for (OccurrenceIterator it(listsFile_, pointers_[entry.id_ - 1], docsCount); !it.end(); it.next()) {
         docsList.push_back(it.getDoc());
       }
     }
@@ -111,10 +111,16 @@ class InvertedListWriterImpl : public InvertedListWriter {
       if (currentTerm_ != term) {
         currentTerm_ = term;
         ifstream::pos_type seekp = listsFile_->getSeekPos();
+        //if (seekp == seekp_) {
+        // danilo
+          //cout << term << " FUDEU " << seekp_ << " " << seekp << endl;
+        //}
         pointers_.push_back(seekp);
       }
+
       listsFile_->writeInt(doc);
       listsFile_->writeInt(tf);
+      seekp_ += 2 * sizeof(int_id);
     }
     virtual void close() {
       listsFile_->close();
@@ -125,7 +131,9 @@ class InvertedListWriterImpl : public InvertedListWriter {
         vocabularyFile->writeString(it->first);
         //cout << it->first << endl;
         vocabularyFile->writeInt(entry.df_);
-        vocabularyFile->writeFilePointer(pointers_[entry.id_]);
+        vocabularyFile->writeFilePointer(pointers_[entry.id_ - 1]);
+// danilo
+        //cout << it->first << " " << entry.df_ << " " << pointers_[entry.id_] << endl;
       }
       vocabularyFile->close();
       delete vocabularyFile;
@@ -135,6 +143,7 @@ class InvertedListWriterImpl : public InvertedListWriter {
     FileHandler* listsFile_;
     string baseFileName_;
     vector<ifstream::pos_type> pointers_;
+    ifstream::pos_type seekp_ = 0;
     int_id currentTerm_ = 0;
 };
 

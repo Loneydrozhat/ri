@@ -5,10 +5,15 @@ using namespace std;
 
 void printResults(vector<int_id> &docs) {
   cout << "Documents found: " << docs.size() << endl;
+
+  for (auto it = docs.begin(); it != docs.end(); it++) {
+    cout << "doc " << (*it) << endl;
+  }
+
 }
 
 int main(int argc, char** argv) {
-  InvertedList* reader = openInvertedList("index");
+  InvertedList* reader = openInvertedList("out");
 
   string query;
   while (true) {

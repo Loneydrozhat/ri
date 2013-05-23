@@ -21,6 +21,10 @@ object QueryEngine {
   def bm25(vocabulary: Vocabulary, documentDb: DocumentDb, k1: Double = 1.0, b: Double = 0.75): QueryEngine = {
     new Bm25QueryEngine(vocabulary, documentDb, k1, b)
   }
+
+  def vectorBm25(vocabulary: Vocabulary, documentDb: DocumentDb, c: Double, k1: Double = 1.0, b: Double = 0.75): QueryEngine = {
+    new VectorBm25QueryEngine(vocabulary, documentDb, c, k1, b)
+  }
 }
 
 abstract class AbstractQueryEngine(
@@ -46,11 +50,12 @@ abstract class AbstractQueryEngine(
 
     for (termEntry <- termEntries) {
       val cursor = termEntry.findOccurences
-      val termWeight = computeTermFactor(termEntry.totalFreq)
+      val idf1 = Math.log(1 + (documentDb.count.toDouble / termEntry.totalFreq))
+      val idf2 = Math.log(((documentDb.count.toDouble - termEntry.totalFreq + 0.5) / (termEntry.totalFreq + 0.5)))
       try {
         while (cursor.fetchNext) {
           val doc = documentDb.get(cursor.documentId)
-          val termDocWeight = computeTermContribution(cursor.freq, termWeight, doc)
+          val termDocWeight = computeTermContribution(cursor.freq, idf1, idf2, doc)
           accumulatorPool.addToAccumulator(cursor.documentId, termDocWeight)
         }
       } finally {
@@ -79,9 +84,7 @@ abstract class AbstractQueryEngine(
     result.toList
   }
 
-  def computeTermFactor(totalFreq: Int): Double
-
-  def computeTermContribution(freqInDoc: Int, termFactor: Double, doc: Document): Double
+  def computeTermContribution(freqInDoc: Int, idf1: Double, idf2: Double, doc: Document): Double
   
   def computeNormalizationFactor(doc: Document): Double
 
@@ -91,12 +94,8 @@ class VectorQueryEngine(
   override val vocabulary: Vocabulary,
   override val documentDb: DocumentDb) extends AbstractQueryEngine(vocabulary, documentDb) {
 
-  def computeTermFactor(totalFreq: Int) = {
-    Math.log(1 + (documentDb.count.toDouble / totalFreq))
-  }
-  
-  def computeTermContribution(freqInDoc: Int, termFactor: Double, doc: Document) = {
-    (1 + Math.log(freqInDoc)) * termFactor
+  override def computeTermContribution(freqInDoc: Int, idf1: Double, idf2: Double, doc: Document) = {
+    (1 + Math.log(freqInDoc)) * idf1
   }
   
   def computeNormalizationFactor(doc: Document) = {
@@ -110,18 +109,31 @@ class Bm25QueryEngine(
   val k1: Double,
   val b: Double) extends AbstractQueryEngine(vocabulary, documentDb) {
 
-  def computeTermFactor(totalFreq: Int) = {
-    Math.log(((documentDb.count.toDouble - totalFreq + 0.5) / (totalFreq + 0.5)))
-  }
-  
-  def computeTermContribution(freqInDoc: Int, termFactor: Double, doc: Document) = {
+  override def computeTermContribution(freqInDoc: Int, idf1: Double, idf2: Double, doc: Document) = {
     val numerator = (k1 + 1.0) * freqInDoc
     val lengthFactor = doc.length / documentDb.avgLength
-    val denominator = (k1 * (1 - b + (b * lengthFactor))) + freqInDoc
-    numerator / denominator 
+    val denominator = (k1 * (1.0 - b + (b * lengthFactor))) + freqInDoc
+    idf2 * (numerator / denominator) 
   }
   
   def computeNormalizationFactor(doc: Document) = {
     1.0
   }
 }
+
+
+class VectorBm25QueryEngine(
+  override val vocabulary: Vocabulary,
+  override val documentDb: DocumentDb,
+  val c: Double,
+  override val k1: Double,
+  override val b: Double) extends Bm25QueryEngine(vocabulary, documentDb, k1, b) {
+
+  override def computeTermContribution(freqInDoc: Int, idf1: Double, idf2: Double, doc: Document) = {
+    val vector = ((1 + Math.log(freqInDoc)) * idf1) / doc.norm
+    val bm25 = super.computeTermContribution(freqInDoc, idf1, idf2, doc)
+    ((1.0 - c) * bm25) + (c * vector) 
+  }
+
+}
+

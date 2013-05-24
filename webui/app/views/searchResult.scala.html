@@ -1,4 +1,4 @@
-@(params: SearchParams, documents: List[QueryResult])
+@(params: SearchParams, documents: List[QueryResult], relevants: Set[String])
 
 @main("Resultados da busca: " + params.query) {
   
@@ -12,9 +12,13 @@
       
     } else {
       <table class="table">
-        <tr><th>Peso</th><th>URL</th></tr>
+        <tr><th>Peso</th><th>Rel.</th><th>URL</th></tr>
       @for(doc <- documents) {
-  	    <tr><td>@{"%.3f".format(doc.weight)}</td><td><a href="@doc.url" target="_blank">@doc.url</a></td></tr>
+  	    <tr>
+  	      <td>@{"%.3f".format(doc.weight)}</td>
+  	      <td style="font-weight:bold; color:green;">@{if (relevants.contains(doc.url)) "S" else ""}</td>
+  	      <td><a href="@doc.url" target="_blank">@doc.url</a></td>
+  	    </tr>
       }
       </table>
     }

@@ -11,6 +11,7 @@ trait QueryEngine {
   val vocabulary: Vocabulary
   val documentDb: DocumentDb
   def findDocuments(query: String, r: Int, accumulators: Int): List[QueryResult]
+  def name: String
 }
 
 object QueryEngine {
@@ -67,6 +68,8 @@ abstract class AbstractQueryEngine(
 
     val heap = new HeapList[QueryResult](Math.min(accumulatorPool.size(), r))
 
+    //val uniq = new HashSet[String]
+
     while (iter.hasNext) {
       val docId = iter.next
       val doc = documentDb.get(docId)
@@ -74,8 +77,15 @@ abstract class AbstractQueryEngine(
       val normalizationFactor = computeNormalizationFactor(doc)
       accumulatorPool.multiplyAccumulatorBy(docId, normalizationFactor)
       heap.pushAndReplaceMin(new QueryResult(doc.url, accumulatorPool.getValue(docId)))
+      
+//      if (uniq.contains(doc.url)) {
+//        Console.println(doc.url);
+//      } else {
+//        uniq.add(doc.url)
+//      }
     }
-
+    
+    
     val result: MutableList[QueryResult] = MutableList()
     while (heap.size() > 0) {
       heap.popMin() +=: result
@@ -101,6 +111,8 @@ class VectorQueryEngine(
   def computeNormalizationFactor(doc: Document) = {
     1.0 / doc.norm
   }
+  
+  def name = "vector"
 }
 
 class Bm25QueryEngine(
@@ -119,6 +131,8 @@ class Bm25QueryEngine(
   def computeNormalizationFactor(doc: Document) = {
     1.0
   }
+  
+  def name = "bm25[k1=%.1f;b=%.1f]".format(k1, b)
 }
 
 
@@ -135,5 +149,6 @@ class VectorBm25QueryEngine(
     ((1.0 - c) * bm25) + (c * vector) 
   }
 
+  override def name = "vbm[c=%.1f;k1=%.1f;b=%.1f]".format(c, k1, b)
 }
 

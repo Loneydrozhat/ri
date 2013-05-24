@@ -16,10 +16,10 @@ import play.api.mvc.Controller
 
 object Application extends Controller {
 
-  val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"))
-  val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"))
-//  val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"))
-//  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"))
+//  val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"))
+//  val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"))
+  val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"))
+  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"))
 
   def index = Action {
     val params = SearchParams("", 50, 5000, "vector", 0.5, 1.0, 0.75)

@@ -5,6 +5,7 @@
 #include "links_processor.h"
 #include "vocabulary.h"
 #include "file_handler.h"
+#include "page_ranker.h"
 
 using namespace std;
 
@@ -32,14 +33,15 @@ void initArgs(int argc, char** argv, string &inputDirectory, string &indexFileNa
 }
 
 
-void readVocabularyFile(Vocabulary& vocabulary_, string outputPrefix) {
+void readVocabularyFile(Vocabulary* vocabulary, const string& outputPrefix) {
   FileHandler* vocabularyFile = openFile(outputPrefix + ".vocabulary.dat");
   unsigned int vocSize = vocabularyFile->readInt();
   for (unsigned int i = 0; i < vocSize; i++) {
     string term = vocabularyFile->readString();
-    vocabulary_.put(term);
+    vocabulary->put(term);
     int_id df = vocabularyFile->readInt();
-    vocabulary_.setDf(term, df);
+    vocabulary->setDf(term, df);
+    vocabularyFile->readFilePointer();
   }
   delete vocabularyFile;
 }
@@ -64,19 +66,22 @@ int main(int argc, char** argv) {
   delete source;
 
   DocumentSource* source2 = collectionArchive(inputDirectory, indexFileName);
-  Indexer* indexer = createIndexer(bufferSize, outputPrefix);
+  //Indexer* indexer = createIndexer(bufferSize, outputPrefix);
 
-  Vocabulary vocabulary_;
-  readVocabularyFile(vocabulary_, outputPrefix);
+  Vocabulary vocabulary;
+  readVocabularyFile(&vocabulary, outputPrefix);
 
-  LinksProcessor processor(source2, indexer, &docDb);
+  LinksProcessor processor(source2, &docDb, &vocabulary);
   cout << "Processing documents..." << endl;
   unsigned int t0 = time(NULL);
   processor.process();
   unsigned int t1 = time(NULL) - t0;
   cout << "Total time: " << t1 << "s" << endl;
 
+  PageRanker ranker(&docDb);
+  ranker.compute();
+
   delete source2;
-  delete indexer;
+  //delete indexer;
   return EXIT_SUCCESS;
 }

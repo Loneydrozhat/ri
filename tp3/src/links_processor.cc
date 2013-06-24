@@ -13,7 +13,6 @@ void LinksProcessor::process() {
 
   while (document_source_->fetchNext()) {
     string url = document_source_->getUrl();
-    //indexer_->beginDocument(url);
     int_id docId = docDb_->getId(url);
     DocDbEntry& docEntry = docDb_->get(docId);
 
@@ -24,21 +23,24 @@ void LinksProcessor::process() {
     tree<HTML::Node>::iterator it = dom.begin();
     tree<HTML::Node>::iterator end = dom.end();
 
+    int outlinks = 0;
+
     for (; it != end; ++it) {
       
       if ((!it->isTag()) && (!it->isComment())) {
-        bool titleTerms = false;
         DocDbEntry& otherDocEntry = docEntry;
 
         tree<HTML::Node>::iterator parentTag = dom.parent(it);
         string tagName = parentTag->tagName();
         lowerString(tagName);
+        
         if (tagName == "a") {
           parentTag->parseAttributes();
           pair<bool, string> hrefAttribute = parentTag->attribute("href");
           if (hrefAttribute.first) {
             string href = hrefAttribute.second;
             if (href != url) {
+              outlinks++;
               int_id otherDoc = docDb_->getId(href);
               if (otherDoc > 0) {
                 otherDocEntry = docDb_->get(otherDoc);
@@ -48,28 +50,30 @@ void LinksProcessor::process() {
 
             }
           }
-          titleTerms = true;
         } else if (tagName == "title") {
-          titleTerms = true;
+          //
+        } else {
+          continue;
         }
         
-        if (titleTerms) {
-          string input = it->text();
-          StringTokenizer* st = stringTokenizer(&input, charset);
-          string term;
-          while (st->fetch(term)) {
-            //otherDocEntry.addTerm();
-
-            //indexer_->addTerm(term);
-            //cout << tagName << charset << " " << term << endl;
+        string input = it->text();
+        StringTokenizer* st = stringTokenizer(&input, charset);
+        string term;
+        while (st->fetch(term)) {
+          unordered_map<string, VocabularyEntry>::const_iterator it = vocabulary_->find(term);
+          if (it == vocabulary_->end()) {
+            cout << "term not found: " << term << endl;
           }
-          delete st;
+          otherDocEntry.addTerm(it->second.id_);
         }
+        delete st;
       }
       
     }
+
+    docEntry.outlinks = outlinks;
+    // danilo
   }
 
-  //indexer_->end();
 }
 

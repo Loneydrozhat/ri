@@ -30,13 +30,12 @@ class IndexerImpl : public Indexer {
     IndexerImpl(size_t bufferSize, const string &filename) {
       filename_ = filename;
       tempf_ = createFile(filename + ".buffer.dat");
-      docsFile_ = createFile(filename + ".docs.dat");
+      docsFile_.open(filename + ".docs.txt");
       bufferSize_ = bufferSize;
       t0_ = time(NULL);
     }
     ~IndexerImpl() {
       delete tempf_;
-      delete docsFile_;
     }
     virtual void beginDocument(const string &url) {
       endDocument();
@@ -55,7 +54,7 @@ class IndexerImpl : public Indexer {
       endDocument();
       tempf_->flush();
 
-      docsFile_->close();
+      docsFile_.close();
 
       unsigned int tt = time(NULL) - t0_;
       cout << ERASE << documents_.size() <<  " processed in " << tt << "s" << endl;
@@ -73,7 +72,7 @@ class IndexerImpl : public Indexer {
     Vocabulary vocabulary_;
     unordered_map<int_id, int_id> freqMap_;
     FileHandler* tempf_;
-    FileHandler* docsFile_;
+    ofstream docsFile_;
     string filename_;
     size_t totalTriples_ = 0;
     size_t bufferSize_;
@@ -104,9 +103,7 @@ class IndexerImpl : public Indexer {
 
       docNorm = sqrt(docNorm);
 
-      docsFile_->writeString(documents_[currentDoc - 1]);
-
-      //docsFile_ << documents_[currentDoc - 1] << " " << docLength << " " << docNorm << endl;
+      docsFile_ << documents_[currentDoc - 1] << " " << docLength << " " << docNorm << endl;
 
       freqMap_.erase(freqMap_.begin(), freqMap_.end());
 

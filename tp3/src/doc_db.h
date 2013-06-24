@@ -11,6 +11,7 @@ using namespace std;
 struct DocDbEntry {
   vector<int_id> backrefs;
   vector<int_id> terms;
+  int outlinks = 0;
   void addBackref(int_id docId) {
     backrefs.push_back(docId);
   }

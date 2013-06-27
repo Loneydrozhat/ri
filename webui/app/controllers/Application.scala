@@ -1,5 +1,10 @@
 package controllers
 
+import scala.collection.mutable.MutableList
+import scala.io.Source
+import scala.math.BigDecimal.double2bigDecimal
+
+import models.Document
 import models.DocumentDb
 import models.QueryEngine
 import models.SearchParams
@@ -7,20 +12,20 @@ import models.Vocabulary
 import play.api.Play
 import play.api.Play.current
 import play.api.data.Form
+import play.api.data.Forms.bigDecimal
 import play.api.data.Forms.mapping
 import play.api.data.Forms.number
-import play.api.data.Forms.bigDecimal
 import play.api.data.Forms.text
 import play.api.mvc.Action
 import play.api.mvc.Controller
-import scala.io.Source
+import utils.HeapList
 
 object Application extends Controller {
 
-    //val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"))
-    //val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"))
+  //val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"))
+  //val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"), Play.getFile("data/out.pr.txt"))
   val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"))
-  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"))
+  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"), Play.getFile("data/cri.pr.txt"))
 
   def index = Action {
     val params = SearchParams("", 50, 5000, "vector", 0.5, 1.0, 0.75)
@@ -49,6 +54,8 @@ object Application extends Controller {
     val engine = params.engine match {
       case "vector" => QueryEngine.vector(vocabulary, documentDb)
       case "bm25" => QueryEngine.bm25(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
+      case "bm25Pr" => QueryEngine.bm25Pr(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
+      case "bm25LogPr" => QueryEngine.bm25LogPr(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
       case "combined" => QueryEngine.vectorBm25(vocabulary, documentDb, params.c.doubleValue, params.k1.doubleValue, params.b.doubleValue)
     }
 
@@ -59,5 +66,21 @@ object Application extends Controller {
 
   def printVocabulary = Action {
     Ok(views.html.vocabulary(vocabulary))
+  }
+  
+  def printPagerank = Action {
+    
+    val heap = new HeapList[Document](Math.min(documentDb.count, 250))
+    for (i <- 1 to documentDb.count) {
+      val doc = documentDb.get(i);
+      heap.pushAndReplaceMin(doc);
+    }
+    
+    val result: MutableList[Document] = MutableList()
+    while (heap.size() > 0) {
+      heap.popMin() +=: result
+    }
+    
+    Ok(views.html.pagerank(result.toList))
   }
 }

@@ -1,0 +1,12 @@
+@(documents: List[Document])
+
+@main("Pagerank") {
+  
+  <table>
+    <tr><th>Referências</th><th>Pagerank</th><th>URL</th></tr>
+  @for(doc <- documents) {
+    <tr><td>@doc.indegree</td><td>@doc.pr</td><td>@doc.url</td></tr>
+  }
+  </table>
+  
+}

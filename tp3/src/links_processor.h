@@ -10,16 +10,15 @@ using namespace std;
 
 class LinksProcessor {
   public:
-    LinksProcessor(DocumentSource* documentSource, DocDb* docDb, Vocabulary* vocabulary) {
+    LinksProcessor(DocumentSource* documentSource, Vocabulary* vocabulary) {
       document_source_ = documentSource;
-      docDb_ = docDb;
       vocabulary_ = vocabulary;
     }
-    virtual void process();
+    virtual void process(DocDb& docDb);
+    virtual void emitTerms(const string& text, int charset, int_id docId, DocDb& docDb);
     virtual ~LinksProcessor() {}
   protected:
     DocumentSource* document_source_;
-    DocDb* docDb_;
     Vocabulary* vocabulary_;
 };
 

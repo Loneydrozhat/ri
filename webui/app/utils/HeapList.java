@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 public class HeapList<E extends Comparable<E>> extends ArrayList<E> {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final int maxSize;
 	boolean heapBuilt = false;
 	
@@ -57,8 +59,10 @@ public class HeapList<E extends Comparable<E>> extends ArrayList<E> {
 				buildMinHeap();
 			}
 			E min = this.get(0);
-			this.set(0, newElem);
-			minHeapify(0, this.size());
+			if (compare(newElem, min) > 0) {
+				this.set(0, newElem);
+				minHeapify(0, this.size());
+			}
 		}
 	}
 

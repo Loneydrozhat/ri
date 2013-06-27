@@ -8,8 +8,6 @@
 
   <div class="controls">
     <input type="text" name="r" class="input-small" value="@params.r"><span class="help-inline">resultados</span>
-  </div>
-  <div class="controls">
     <input type="text" name="amax" class="input-small" value="@params.amax"><span class="help-inline">acumuladores</span>
   </div>
   <div class="controls">
@@ -21,6 +19,15 @@
       <input type="radio" name="engine" value="bm25" @{if (params.engine == "bm25") "checked" else ""}>
       Modelo BM25
     </label>
+    <label class="radio">
+      <input type="radio" name="engine" value="bm25Pr" @{if (params.engine == "bm25Pr") "checked" else ""}>
+      Modelo BM25 Com multiplicador Pagerank
+    </label>
+    <label class="radio">
+      <input type="radio" name="engine" value="bm25LogPr" @{if (params.engine == "bm25LogPr") "checked" else ""}>
+      Modelo BM25 Com multiplicador log Pagerank
+    </label>
+    <!--
       <span class="help-inline">K1 = </span><input type="text" name="k1" class="input-small" value="@params.k1">
       <span class="help-inline">b = </span><input type="text" name="b" class="input-small" value="@params.b">
     <label class="radio">
@@ -28,6 +35,7 @@
       Combinação
     </label>
       <span class="help-inline">C = </span><input type="text" name="c" class="input-small" value="@params.c">
+    -->
   </div>
   
   @if(params.query == ""){

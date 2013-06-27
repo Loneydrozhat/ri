@@ -32,6 +32,46 @@ void initArgs(int argc, char** argv, string &inputDirectory, string &indexFileNa
   }
 }
 
+void readDocsFile(DocDb& docDb, const string& outputPrefix) {
+  string line;
+  ifstream docsFile(outputPrefix + ".docs.txt");
+  while (docsFile.good()) {
+    getline(docsFile, line);
+    if (!line.empty()) {
+      size_t last = line.find_first_of(' ');
+      string url = line.substr(0, last);
+      docDb.add(url);
+    }
+  }
+  docsFile.close();
+
+  // TODO remover
+  /*
+  size_t n = docDb->size();
+
+  unsigned int maxInDegree = 0;
+  unsigned int inDegreeSum = 0;
+  unsigned int outDegreeSum = 0;
+  unsigned int inDegreeCount = 0;
+  for (unsigned int i = 0; i < n; i++) {
+    DocDbEntry& docEntry = docDb->get(i + 1);
+    vector<int_id>& inlinks = docEntry.inlinks;
+    size_t inlinkCount = inlinks.size();
+    maxInDegree = (inlinkCount > maxInDegree) ? inlinkCount : maxInDegree;
+    inDegreeSum += docEntry.inlinksCount;
+    outDegreeSum += docEntry.validoutlinks;
+    if (inlinkCount > 0) {
+      inDegreeCount++;
+    }
+  }
+
+  cout << n << " documents" << endl;
+  cout << "Max in-degree is " << maxInDegree << endl;
+  cout << "Mean in-degree is " << inDegreeSum << endl;
+  cout << "Mean out-degree is " << outDegreeSum << endl;
+  cout << inDegreeCount << " documents have in-degree > 0" << endl;
+  */
+}
 
 void readVocabularyFile(Vocabulary* vocabulary, const string& outputPrefix) {
   FileHandler* vocabularyFile = openFile(outputPrefix + ".vocabulary.dat");
@@ -55,33 +95,40 @@ int main(int argc, char** argv) {
   size_t bufferSize = 1048576;
   initArgs(argc, argv, inputDirectory, indexFileName, outputPrefix, bufferSize);
 
-
-  DocumentSource* source = collectionArchive(inputDirectory, indexFileName);
-  
   DocDb docDb;
-  while (source->fetchNext()) {
-    string url = source->getUrl();
-    docDb.add(url);
-  }
-  delete source;
+  readDocsFile(docDb, outputPrefix);
 
-  DocumentSource* source2 = collectionArchive(inputDirectory, indexFileName);
   //Indexer* indexer = createIndexer(bufferSize, outputPrefix);
 
   Vocabulary vocabulary;
   readVocabularyFile(&vocabulary, outputPrefix);
 
-  LinksProcessor processor(source2, &docDb, &vocabulary);
+  DocumentSource* source = collectionArchive(inputDirectory, indexFileName);
+  LinksProcessor processor(source, &vocabulary);
   cout << "Processing documents..." << endl;
   unsigned int t0 = time(NULL);
-  processor.process();
+  processor.process(docDb);
+
+  //docDb.linkDocuments(52, 53);
+  //docDb.linkDocuments(53, 52);
+
+  PageRanker ranker(&docDb, 0.15);
+  
+  int iterations = 0;
+  //double delta = 0.00000001;
+  double error = ranker.computeIteration();
+  for (int i = 0; i < 50; i++) {
+    error = ranker.computeIteration();
+    iterations++;
+    cout << iterations << " " << error << endl;
+  }
+
+  ranker.print(outputPrefix);
+
+  delete source;
+
   unsigned int t1 = time(NULL) - t0;
   cout << "Total time: " << t1 << "s" << endl;
-
-  PageRanker ranker(&docDb);
-  ranker.compute();
-
-  delete source2;
   //delete indexer;
   return EXIT_SUCCESS;
 }

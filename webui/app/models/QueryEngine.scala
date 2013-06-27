@@ -26,6 +26,14 @@ object QueryEngine {
   def vectorBm25(vocabulary: Vocabulary, documentDb: DocumentDb, c: Double, k1: Double = 1.0, b: Double = 0.75): QueryEngine = {
     new VectorBm25QueryEngine(vocabulary, documentDb, c, k1, b)
   }
+  
+  def bm25Pr(vocabulary: Vocabulary, documentDb: DocumentDb, k1: Double = 1.0, b: Double = 0.75): QueryEngine = {
+    new Bm25PrQueryEngine(vocabulary, documentDb, k1, b)
+  }
+  
+  def bm25LogPr(vocabulary: Vocabulary, documentDb: DocumentDb, k1: Double = 1.0, b: Double = 0.75): QueryEngine = {
+    new Bm25LogPrQueryEngine(vocabulary, documentDb, k1, b)
+  }
 }
 
 abstract class AbstractQueryEngine(
@@ -44,6 +52,8 @@ abstract class AbstractQueryEngine(
       }
     }
 
+    var maxPr = 0.0;
+    
     termEntries.sortWith(
       (t1, t2) => t1.totalFreq < t2.totalFreq)
 
@@ -56,6 +66,7 @@ abstract class AbstractQueryEngine(
       try {
         while (cursor.fetchNext) {
           val doc = documentDb.get(cursor.documentId)
+          maxPr = Math.max(maxPr, doc.pr)
           val termDocWeight = computeTermContribution(cursor.freq, idf1, idf2, doc)
           accumulatorPool.addToAccumulator(cursor.documentId, termDocWeight)
         }
@@ -70,13 +81,26 @@ abstract class AbstractQueryEngine(
 
     //val uniq = new HashSet[String]
 
-    while (iter.hasNext) {
-      val docId = iter.next
-      val doc = documentDb.get(docId)
-      
-      val normalizationFactor = computeNormalizationFactor(doc)
-      accumulatorPool.multiplyAccumulatorBy(docId, normalizationFactor)
-      heap.pushAndReplaceMin(new QueryResult(doc.url, accumulatorPool.getValue(docId)))
+    while (iter.hasNext) { {
+        val docId = iter.next
+        val doc = documentDb.get(docId)
+        
+        val normalizationFactor = computeNormalizationFactor(doc)
+        accumulatorPool.multiplyAccumulatorBy(docId, normalizationFactor)
+        //val prVal = prf * (doc.pr / maxPr)
+        //val prVal = prf * doc.pr
+        
+        //accumulatorPool.addToAccumulator(docId, prVal);
+        //accumulatorPool.multiplyAccumulatorBy(docId, prVal)
+        
+        heap.pushAndReplaceMin(new QueryResult(doc.url, accumulatorPool.getValue(docId), doc.pr))
+        
+//      if (uniq.contains(doc.url)) {
+//        Console.println(doc.url);
+//      } else {
+//        uniq.add(doc.url)
+//      }
+      }
       
 //      if (uniq.contains(doc.url)) {
 //        Console.println(doc.url);
@@ -84,7 +108,6 @@ abstract class AbstractQueryEngine(
 //        uniq.add(doc.url)
 //      }
     }
-    
     
     val result: MutableList[QueryResult] = MutableList()
     while (heap.size() > 0) {
@@ -152,3 +175,28 @@ class VectorBm25QueryEngine(
   override def name = "vbm[c=%.1f;k1=%.1f;b=%.1f]".format(c, k1, b)
 }
 
+class Bm25PrQueryEngine(
+  override val vocabulary: Vocabulary,
+  override val documentDb: DocumentDb,
+  override val k1: Double,
+  override val b: Double) extends Bm25QueryEngine(vocabulary, documentDb, k1, b) {
+
+  override def computeNormalizationFactor(doc: Document) = {
+    doc.pr
+  }
+  
+  override def name = "bm25pr[k1=%.1f;b=%.1f]".format(k1, b)
+}
+
+class Bm25LogPrQueryEngine(
+  override val vocabulary: Vocabulary,
+  override val documentDb: DocumentDb,
+  override val k1: Double,
+  override val b: Double) extends Bm25QueryEngine(vocabulary, documentDb, k1, b) {
+
+  override def computeNormalizationFactor(doc: Document) = {
+    1.0 + Math.log(doc.pr)
+  }
+  
+  override def name = "bm25logpr[k1=%.1f;b=%.1f]".format(k1, b)
+}

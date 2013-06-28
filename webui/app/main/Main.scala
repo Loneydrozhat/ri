@@ -15,7 +15,7 @@ object Main extends App {
   val inputDir = new File(args(0))
   val queryFiles = inputDir.listFiles.filter(_.isFile())
 
-  val vocabulary = Vocabulary.fromFile(new File("data/cri.vocabulary.dat"), new File("data/cri.index.dat"))
+  val vocabulary = Vocabulary.fromFile(new File("data/cri.vocabulary.dat"), new File("data/cri.index.dat"), new File("data/cri.avocabulary.dat"), new File("data/cri.aindex.dat"))
   val documentDb = DocumentDb.fromFile(new File("data/cri.docs.txt"), new File("data/cri.pr.txt"))
   //val vocabulary = Vocabulary.fromFile(new File("data/out.vocabulary.dat"), new File("data/out.index.dat"))
   //val documentDb = DocumentDb.fromFile(new File("data/out.docs.txt"), new File("data/out.pr.txt"))
@@ -25,13 +25,16 @@ object Main extends App {
   val bm25_075 = QueryEngine.bm25(vocabulary, documentDb, 1.0, 0.8)
   val bm25Pr_075 = QueryEngine.bm25Pr(vocabulary, documentDb, 1.0, 0.8)
   val bm25LogPr_075 = QueryEngine.bm25LogPr(vocabulary, documentDb, 1.0, 0.8)
+  val bm25aonly = QueryEngine.bm25AOnly(vocabulary, documentDb, 1.0, 0.8)
+  val bm25a = QueryEngine.bm25a(vocabulary, documentDb, 1.0, 0.8, 2.0)
+  val bm25pra2 = QueryEngine.bm25pra(vocabulary, documentDb, 1.0, 0.8, 2.0)
   //val vbm25_05 = QueryEngine.vectorBm25(vocabulary, documentDb, 0.5, 1.0, 0.8)
   //val vbm25_up = QueryEngine.vectorBm25(vocabulary, documentDb, 0.5, 1.0, 0.8)
   //val vbm25_08 = QueryEngine.vectorBm25(vocabulary, documentDb, 0.8, 2.0, 0.8)
   //val vbm1 = QueryEngine.vectorBm25(vocabulary, documentDb, 0.5, 1.0, 0.8)
   //val vbm2 = QueryEngine.vectorBm25(vocabulary, documentDb, 0.9, 1.0, 0.8)
 
-  val engines = List(bm25_075, bm25Pr_075, bm25LogPr_075)
+  val engines = List(bm25_075, bm25aonly, bm25a, bm25pra2)
 
   val r = 1000000
   val accumulators = 1000000
@@ -56,7 +59,7 @@ object Main extends App {
       //Console.println(actual.size + " documentos recuperados")
 
       val series = precisionAtRecall(actual, relevants)
-      val precisionAt10 = precisionAtRank(10, actual, relevants)
+      val precisionAt10 = precisionAtRank(20, actual, relevants)
       precisionAt10Mean(i) += precisionAt10 / queryFiles.size
 
       names += engine.name

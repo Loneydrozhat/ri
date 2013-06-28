@@ -12,7 +12,7 @@
       
     } else {
       <table class="table">
-        <tr><th>Peso</th><th>Pagerank</th><th>Rel.</th><th>URL</th></tr>
+        <tr><th>Score</th><th>Pagerank</th><th>Rel.</th><th>URL</th></tr>
       @for(doc <- documents) {
   	    <tr>
   	      <td>@{"%.3f".format(doc.weight)}</td>

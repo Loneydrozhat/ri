@@ -22,13 +22,13 @@ import utils.HeapList
 
 object Application extends Controller {
 
-  //val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"))
-  //val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"), Play.getFile("data/out.pr.txt"))
-  val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"))
-  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"), Play.getFile("data/cri.pr.txt"))
+  val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"), Play.getFile("data/out.avocabulary.dat"), Play.getFile("data/out.aindex.dat"))
+  val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"), Play.getFile("data/out.pr.txt"))
+  //val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"), Play.getFile("data/cri.avocabulary.dat"), Play.getFile("data/cri.aindex.dat"))
+  //val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"), Play.getFile("data/cri.pr.txt"))
 
   def index = Action {
-    val params = SearchParams("", 50, 5000, "vector", 0.5, 1.0, 0.75)
+    val params = SearchParams("", 50, 5000, "bm25-anchor-pr", 1.0, 0.75)
     Ok(views.html.search(params))
   }
 
@@ -38,7 +38,6 @@ object Application extends Controller {
       "r" -> number,
       "amax" -> number,
       "engine" -> text,
-      "c" -> bigDecimal,
       "k1" -> bigDecimal,
       "b" -> bigDecimal)(SearchParams.apply)(SearchParams.unapply))
 
@@ -54,9 +53,10 @@ object Application extends Controller {
     val engine = params.engine match {
       case "vector" => QueryEngine.vector(vocabulary, documentDb)
       case "bm25" => QueryEngine.bm25(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
-      case "bm25Pr" => QueryEngine.bm25Pr(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
-      case "bm25LogPr" => QueryEngine.bm25LogPr(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
-      case "combined" => QueryEngine.vectorBm25(vocabulary, documentDb, params.c.doubleValue, params.k1.doubleValue, params.b.doubleValue)
+      case "bm25-anchorOnly" => QueryEngine.bm25AOnly(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue)
+      case "bm25-anchor" => QueryEngine.bm25a(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue, 2.0)
+      case "bm25-anchor-pr" => QueryEngine.bm25pra(vocabulary, documentDb, params.k1.doubleValue, params.b.doubleValue, 2.0)
+      case "combined" => QueryEngine.vectorBm25(vocabulary, documentDb, 0.5, params.k1.doubleValue, params.b.doubleValue)
     }
 
     val result = engine.findDocuments(params.query, params.r, params.amax)

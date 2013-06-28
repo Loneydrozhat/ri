@@ -11,12 +11,17 @@ import scala.collection.Iterator
 trait Vocabulary extends Iterable[TermEntry] {
   def findTerm(term: String): TermEntry
   def iterator: Iterator[TermEntry]
+  def findOccurences(termEntry: TermEntry): OccurencesCursor
+  def findAnchorOccurences(termEntry: TermEntry): OccurencesCursor
 }
 
-trait TermEntry {
-  val term: String
-  val totalFreq: Int
-  def findOccurences: OccurencesCursor
+class TermEntry(
+  val term: String,
+  var bodyFreq: Int,
+  var bodyPointer: Long,
+  var anchorFreq: Int,
+  var anchorPointer: Long
+  ) {
 }
 
 trait OccurencesCursor {
@@ -63,12 +68,11 @@ class OccurencesCursorImpl(val size: Int, indexFile: File, pointer: Long) extend
 }
 
 object Vocabulary {
-  def fromFile(vocabularyFile: File, indexFile: File): Vocabulary = {
+  def fromFile(vocabularyFile: File, indexFile: File, avocabularyFile: File, aindexFile: File): Vocabulary = {
 
-    val inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(vocabularyFile)))
+    val hmap = new HashMap[String, TermEntry]
 
-    val hmap = new HashMap[String, Tuple2[Int, Long]]
-
+	val inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(vocabularyFile)))
     try {
 
       val size = FileUtils.readBleInt(inputStream, 4)
@@ -78,30 +82,51 @@ object Vocabulary {
         val totalFreq = FileUtils.readBleInt(inputStream, 4)
         val pointer = FileUtils.readBleLong(inputStream, 16)
         
-//        Console.printf("%s %d %d\n", term, totalFreq, pointer)
-        
-        hmap.put(term, (totalFreq, pointer))
+        hmap.put(term, new TermEntry(term, totalFreq, pointer, 0, 0))
       }
 
     } finally {
       inputStream.close()
+    }
+    
+    val inputStream2 = new DataInputStream(new BufferedInputStream(new FileInputStream(avocabularyFile)))
+    try {
+      val size = FileUtils.readBleInt(inputStream2, 4)
+
+      for (i <- 1 to size) {
+        val term = FileUtils.readNullTerminatedString(inputStream2)
+		val aTotalFreq = FileUtils.readBleInt(inputStream2, 4)
+		val apointer = FileUtils.readBleLong(inputStream2, 16)
+        
+//        if (aTotalFreq > 0) {
+//          Console.printf("%s %d %d\n", term, aTotalFreq, apointer)
+//        }
+        
+        val entry = hmap.get(term)
+        entry.anchorFreq = aTotalFreq
+        entry.anchorPointer = apointer
+      }
+
+    } finally {
+      inputStream2.close()
     }
 
     new Vocabulary() {
       def findTerm(t: String): TermEntry = {
         val te = hmap.get(t)
         if (te != null) {
+          te
+          /*
           new TermEntry {
             val term = t
-            val totalFreq = te._1
+            val bodyFreq = te._1
+            val anchorFreq = te._3
             def findOccurences = new OccurencesCursorImpl(te._1, indexFile, te._2)
+            def findAnchorOccurences = new OccurencesCursorImpl(te._3, aindexFile, te._4)
           }
+          */
         } else {
-          new TermEntry {
-            val term = t
-            val totalFreq = 0
-            def findOccurences = NilCursor
-          }
+          new TermEntry(t, 0, 0, 0, 0)
         }
       }
 
@@ -110,15 +135,14 @@ object Vocabulary {
         new Iterator[TermEntry] {
           def hasNext = iter.hasNext()
           def next = {
-            val entry = iter.next()
-            new TermEntry {
-              val term = entry.getKey()
-              val totalFreq = entry.getValue()._1
-              def findOccurences = NilCursor
-            }
+            iter.next().getValue()
           }
         }
       }
+      
+      override def findOccurences(te: TermEntry) = new OccurencesCursorImpl(te.bodyFreq, indexFile, te.bodyPointer)
+      override def findAnchorOccurences(te: TermEntry) = new OccurencesCursorImpl(te.anchorFreq, aindexFile, te.anchorPointer)
+      
     }
 
   }

@@ -6,6 +6,8 @@
 #include "vocabulary.h"
 #include "file_handler.h"
 #include "page_ranker.h"
+#include "anchor_indexer.h"
+#include "heap.h"
 
 using namespace std;
 
@@ -44,36 +46,9 @@ void readDocsFile(DocDb& docDb, const string& outputPrefix) {
     }
   }
   docsFile.close();
-
-  // TODO remover
-  /*
-  size_t n = docDb->size();
-
-  unsigned int maxInDegree = 0;
-  unsigned int inDegreeSum = 0;
-  unsigned int outDegreeSum = 0;
-  unsigned int inDegreeCount = 0;
-  for (unsigned int i = 0; i < n; i++) {
-    DocDbEntry& docEntry = docDb->get(i + 1);
-    vector<int_id>& inlinks = docEntry.inlinks;
-    size_t inlinkCount = inlinks.size();
-    maxInDegree = (inlinkCount > maxInDegree) ? inlinkCount : maxInDegree;
-    inDegreeSum += docEntry.inlinksCount;
-    outDegreeSum += docEntry.validoutlinks;
-    if (inlinkCount > 0) {
-      inDegreeCount++;
-    }
-  }
-
-  cout << n << " documents" << endl;
-  cout << "Max in-degree is " << maxInDegree << endl;
-  cout << "Mean in-degree is " << inDegreeSum << endl;
-  cout << "Mean out-degree is " << outDegreeSum << endl;
-  cout << inDegreeCount << " documents have in-degree > 0" << endl;
-  */
 }
 
-void readVocabularyFile(Vocabulary* vocabulary, const string& outputPrefix) {
+void readVocabularyFile(Vocabulary* vocabulary, const string& outputPrefix, vector<unordered_map<int_id, int_id>>& atf) {
   FileHandler* vocabularyFile = openFile(outputPrefix + ".vocabulary.dat");
   unsigned int vocSize = vocabularyFile->readInt();
   for (unsigned int i = 0; i < vocSize; i++) {
@@ -82,10 +57,63 @@ void readVocabularyFile(Vocabulary* vocabulary, const string& outputPrefix) {
     int_id df = vocabularyFile->readInt();
     vocabulary->setDf(term, df);
     vocabularyFile->readFilePointer();
+    atf.push_back(unordered_map<int_id, int_id>());
   }
   delete vocabularyFile;
 }
 
+void writeAindex(Vocabulary& vocabulary, vector<unordered_map<int_id, int_id>>& atf, const string& outputPrefix) {
+  AnchorIndexer aindexer(&vocabulary, outputPrefix);
+
+  if (vocabulary.size() != atf.size()) {
+    cout << "fudeu voc size != atf size" << endl;
+  }
+
+  for (auto termIt = vocabulary.begin(); termIt != vocabulary.end(); termIt++) {
+    VocabularyEntry &entry = termIt->second;
+    int_id termId = entry.id_;
+    entry.df_ = atf[termId - 1].size();
+
+    if (entry.df_ > 0) {
+
+      aindexer.openTerm(termId);
+      //cout << termIt->first << ":";
+
+      vector<Triple> buffer;
+      for (auto it = atf[termId - 1].begin(); it != atf[termId - 1].end(); it++) {
+        Triple triple;
+        triple.term_ = termId;
+        triple.doc_ = it->first;
+        triple.tf_ = it->second;
+        buffer.push_back(triple);
+      }
+      buildMinHeap(buffer);
+      while (buffer.size() > 0) {
+        Triple triple = popMin(buffer);
+        aindexer.writeEntry(triple.term_, triple.doc_, triple.tf_);
+        //cout << " (" << triple.doc_ << ", " << triple.tf_ << ")";
+      }
+      //cout << endl;
+    }
+  }
+
+  aindexer.close();
+}
+
+void computePageRank(DocDb& docDb, const string& outputPrefix, double q) {
+  PageRanker ranker(&docDb, q);
+  
+  int iterations = 0;
+  //double delta = 0.00000001;
+  double error = ranker.computeIteration();
+  for (int i = 0; i < 50; i++) {
+    error = ranker.computeIteration();
+    iterations++;
+    cout << iterations << " " << error << endl;
+  }
+
+  ranker.print(outputPrefix);
+}
 
 int main(int argc, char** argv) {
 
@@ -101,29 +129,20 @@ int main(int argc, char** argv) {
   //Indexer* indexer = createIndexer(bufferSize, outputPrefix);
 
   Vocabulary vocabulary;
-  readVocabularyFile(&vocabulary, outputPrefix);
+  vector<unordered_map<int_id, int_id>> atf;
+  readVocabularyFile(&vocabulary, outputPrefix, atf);
 
   DocumentSource* source = collectionArchive(inputDirectory, indexFileName);
-  LinksProcessor processor(source, &vocabulary);
+  LinksProcessor processor(source, &vocabulary, &atf);
   cout << "Processing documents..." << endl;
   unsigned int t0 = time(NULL);
   processor.process(docDb);
-
-  //docDb.linkDocuments(52, 53);
-  //docDb.linkDocuments(53, 52);
-
-  PageRanker ranker(&docDb, 0.15);
   
-  int iterations = 0;
-  //double delta = 0.00000001;
-  double error = ranker.computeIteration();
-  for (int i = 0; i < 50; i++) {
-    error = ranker.computeIteration();
-    iterations++;
-    cout << iterations << " " << error << endl;
-  }
+  //computePageRank(docDb, outputPrefix, 0.5);
+  //computePageRank(docDb, outputPrefix, 0.25);
+  //computePageRank(docDb, outputPrefix, 0.15);
 
-  ranker.print(outputPrefix);
+  writeAindex(vocabulary, atf, outputPrefix);
 
   delete source;
 

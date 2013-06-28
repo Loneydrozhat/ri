@@ -3,10 +3,11 @@
 @main("Vocabulário") {
   
   <table>
+  <tr><th>Termo</th><th>Freq. doc</th><th>Freq. anchor doc</th></tr>
   @defining(terms.iterator) { iter =>
     @for(i <- 1 to 5000; if iter.hasNext) {
       @defining(iter.next) { entry =>
-        <tr><td>@entry.term</td><td>@entry.totalFreq</td></tr>
+        <tr><td>@entry.term</td><td>@entry.bodyFreq</td><td>@entry.anchorFreq</td></tr>
       }
     }
   }

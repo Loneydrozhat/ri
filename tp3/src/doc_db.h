@@ -36,20 +36,8 @@ class DocDbEntry {
     void incrementOutDegree() {
       outDegree_++;
     }
-    void addTerm(int_id termId) {
-      for (int i = terms_.size() - 1; i >= 0; i--) {
-        if (termId == terms_[i]) {
-          return;
-        }
-      }
-      terms_.push_back(termId);
-    }
-    size_t termsCount() {
-      return terms_.size();
-    }
   private:
     unordered_set<int_id> inlinks_;
-    vector<int_id> terms_;
     size_t outDegree_;
 };
 

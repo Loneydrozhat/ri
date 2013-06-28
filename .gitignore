@@ -40,5 +40,7 @@ bin
 #
 cri.docs.txt
 cri.vocabulary.dat
+cri.avocabulary.dat
 cri.index.dat
+cri.aindex.dat
 cri.pr.txt

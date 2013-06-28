@@ -22,10 +22,10 @@ import utils.HeapList
 
 object Application extends Controller {
 
-  val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"), Play.getFile("data/out.avocabulary.dat"), Play.getFile("data/out.aindex.dat"))
-  val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"), Play.getFile("data/out.pr.txt"))
-  //val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"), Play.getFile("data/cri.avocabulary.dat"), Play.getFile("data/cri.aindex.dat"))
-  //val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"), Play.getFile("data/cri.pr.txt"))
+//  val vocabulary = Vocabulary.fromFile(Play.getFile("data/out.vocabulary.dat"), Play.getFile("data/out.index.dat"), Play.getFile("data/out.avocabulary.dat"), Play.getFile("data/out.aindex.dat"))
+//  val documentDb = DocumentDb.fromFile(Play.getFile("data/out.docs.txt"), Play.getFile("data/out.pr.txt"))
+  val vocabulary = Vocabulary.fromFile(Play.getFile("data/cri.vocabulary.dat"), Play.getFile("data/cri.index.dat"), Play.getFile("data/cri.avocabulary.dat"), Play.getFile("data/cri.aindex.dat"))
+  val documentDb = DocumentDb.fromFile(Play.getFile("data/cri.docs.txt"), Play.getFile("data/cri.pr.txt"))
 
   def index = Action {
     val params = SearchParams("", 50, 5000, "bm25-anchor-pr", 1.0, 0.75)
